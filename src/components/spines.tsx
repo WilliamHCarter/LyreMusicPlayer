@@ -83,7 +83,7 @@ const Spines: Component = () => {
             class=" h-full"
             style={{
               transform: loaded() ? "translateY(0)" : "translateY(100%)",
-              transition: `transform 1s ease-in-out ${index() * 120}ms`,
+              transition: `transform 0.85s ease-in-out ${index() * 60}ms`,
             }}
           >
             <Spine

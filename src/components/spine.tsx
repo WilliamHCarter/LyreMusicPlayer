@@ -1,6 +1,7 @@
 import { createEffect, createSignal, type Component } from "solid-js";
 import { getAccentColor } from "./Helpers";
 import { desaturateRGBAdjusted } from "./Helpers";
+
 interface SpineProps {
   albumCover: string;
   miniCover: string;
@@ -10,6 +11,7 @@ interface SpineProps {
 
 const Spine: Component<SpineProps> = (props) => {
   const [accentColor, setAccentColor] = createSignal("");
+  const [isFullImageLoaded, setIsFullImageLoaded] = createSignal(false);
 
   createEffect(async () => {
     var color = await getAccentColor(props.miniCover);
@@ -17,16 +19,26 @@ const Spine: Component<SpineProps> = (props) => {
     setAccentColor(color);
   });
 
+  const handleFullImageLoad = () => {
+    setIsFullImageLoaded(true);
+  };
+
   return (
     <div
       style={`background-color: ${accentColor()};`}
       class="flex flex-col items-center h-full w-full relative"
     >
-      <div class="top-0 w-full pb-full">
+      <div
+        class="top-0 w-full pb-full relative"
+        style={`background-image: url(${props.miniCover}); background-size: cover;`}
+      >
         <img
           src={props.albumCover}
           alt="Album Cover"
-          class="object-cover w-full h-full"
+          class={`object-cover w-full h-full ${
+            isFullImageLoaded() ? "opacity-100" : "opacity-0"
+          } transition-opacity duration-500`}
+          onload={handleFullImageLoad}
         />
       </div>
       <div class="mt-4 relative whitespace-nowrap [writing-mode:vertical-rl]">
