@@ -14,7 +14,7 @@ const Spine: Component<SpineProps> = (props) => {
   const [isFullImageLoaded, setIsFullImageLoaded] = createSignal(false);
 
   createEffect(async () => {
-    var color = await getAccentColor(props.miniCover);
+    let color = await getAccentColor(props.miniCover);
     color = desaturateRGBAdjusted(color, 0.5, 0.25);
     setAccentColor(color);
   });
@@ -26,7 +26,7 @@ const Spine: Component<SpineProps> = (props) => {
   return (
     <div
       style={`background-color: ${accentColor()};`}
-      class="flex flex-col items-center h-full w-full relative"
+      class="flex flex-col items-center h-full w-full relative grow hover:grow-[2]"
     >
       <div
         class="top-0 w-full pb-full relative"

@@ -33,6 +33,8 @@ const Spines: Component = () => {
   const [albums, setAlbums] = createSignal<Album[]>([]);
   const [mounted, setMounted] = createSignal(false);
   const [loaded, setLoaded] = createSignal(false);
+  const [hoveredIndex, setHoveredIndex] = createSignal(-1);
+
 
   onMount(() => {
     const storedAlbums = localStorage.getItem("defaultAlbums");
@@ -80,7 +82,7 @@ const Spines: Component = () => {
       <For each={albums()}>
         {(album, index) => (
           <div
-            class=" h-full"
+            class=" flex h-full grow hover:grow-[2]"
             style={{
               transform: loaded() ? "translateY(0)" : "translateY(100%)",
               transition: `transform 0.85s ease-in-out ${index() * 60}ms`,
