@@ -1,12 +1,12 @@
 ---
+const numRectangles = 10;
+const colors = ['green', 'blue', 'red', 'blue', 'red', 'blue', 'green',];
 ---
 
-<div class="relative w-screen h-screen overflow-hidden">
-    <div class="flex h-full">
-      <div class="w-1/5 hover:w-2/5 bg-red-500 transition-all duration-200 ease-in-out"></div>
-      <div class="w-1/5 hover:w-2/5 bg-blue-500 transition-all duration-200 ease-in-out"></div>
-      <div class="w-1/5 hover:w-2/5 bg-green-500 transition-all duration-200 ease-in-out"></div>
-      <div class="w-1/5 hover:w-2/5 bg-yellow-500 transition-all duration-200 ease-in-out"></div>
-      <div class="w-1/5 hover:w-2/5 bg-purple-500 transition-all duration-200 ease-in-out"></div>
-    </div>
+<div class="relative w-screen h-screen overflow-hidden" style={`--rectangle-width: ${100 / numRectangles}%`}>
+  <div class="flex h-full">
+    {Array.from({ length: numRectangles }).map((_, index) => (
+      <div class={`bg-${colors[index % colors.length]}-500 w-spineWidth hover:w-hSpineWidth transition-all duration-400 ease-in-out`}></div>
+    ))}
   </div>
+</div>

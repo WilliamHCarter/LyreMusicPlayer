@@ -6,6 +6,10 @@ export default {
       flexGrow: {
         2: "2",
       },
+	  width: {
+		'spineWidth': 'var(--rectangle-width)',
+		'hSpineWidth': 'calc(2 * var(--rectangle-width))',
+	  },
     },
   },
   plugins: [],
