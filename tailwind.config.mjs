@@ -8,7 +8,7 @@ export default {
       },
 	  width: {
 		'spineWidth': 'var(--rectangle-width)',
-		'hSpineWidth': 'calc(2 * var(--rectangle-width))',
+		'hSpineWidth': 'calc(1.4 * var(--rectangle-width))',
 	  },
     },
   },

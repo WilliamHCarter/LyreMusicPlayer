@@ -78,14 +78,15 @@ const Spines: Component = () => {
   };
 
   return (
-    <div class="flex justify-center items-center h-screen overflow-hidden">
+    <div class="relative w-screen h-screen overflow-hidden" style={`--rectangle-width: ${100 / albums().length}%`}>
+      <div class="flex h-full">
       <For each={albums()}>
         {(album, index) => (
           <div
-            class=" flex h-full grow hover:grow-[2]"
+            class=" flex-none h-full w-spineWidth hover:w-hSpineWidth"
             style={{
               transform: loaded() ? "translateY(0)" : "translateY(100%)",
-              transition: `transform 0.85s ease-in-out ${index() * 60}ms`,
+              transition: `transform 0.85s ease-in-out ${index() * 60}ms, width 0.4s ease-out`,
             }}
           >
             <Spine
@@ -97,6 +98,7 @@ const Spines: Component = () => {
           </div>
         )}
       </For>
+      </div>
     </div>
   );
 };
