@@ -33,9 +33,7 @@ const Spines: Component = () => {
   const [albums, setAlbums] = createSignal<Album[]>([]);
   const [mounted, setMounted] = createSignal(false);
   const [loaded, setLoaded] = createSignal(false);
-  const [sumOfWidths, setSumOfWidths] = createSignal(0);
-  const [spineWidths, setSpineWidths] = createSignal<number[]>([]);
-
+  const [expandedIndex, setExpandedIndex] = createSignal<number | null>(null);
 
 
   onMount(() => {
@@ -55,32 +53,6 @@ const Spines: Component = () => {
       }, 600);
     }
   });
-
-  createEffect(() => {
-    const sum = spineWidths().reduce((acc, width) => acc + width, 0);
-    //setSumOfWidths(sum);
-    console.log("Sum of widths:", sum);
-  });
-
-  createEffect(() => {
-    const updateTotalWidth = () => {
-      const elements = document.getElementsByClassName("spine-outer");
-      let sumWidth = 0;
-      for (let i = 0; i < elements.length; i++) {
-        sumWidth += (elements[i] as HTMLElement).offsetWidth;
-      }
-      setSumOfWidths(sumWidth);
-    };
-
-    updateTotalWidth();
-
-    window.addEventListener("resize", updateTotalWidth);
-
-    return () => {
-      window.removeEventListener("resize", updateTotalWidth);
-    };
-  });
-
 
   const fetchAlbums = async (albumIds: string[]) => {
     try {
@@ -105,17 +77,26 @@ const Spines: Component = () => {
     }
   };
 
+  const handleClick = (index: number) => {
+    setExpandedIndex(prevIndex => prevIndex === index ? null : index);
+  };
+
   return (
     <div class="relative w-screen h-screen overflow-hidden" style={`--rectangle-width: ${100 / albums().length}%`}>
-      <div class="flex h-full spine-container">
+      <div class="flex h-full spine-container" style={{     
+         transform: expandedIndex() ? "translateX(calc(-2*var(--rectangle-width)))" : "translateX(0)"
+}}>
       <For each={albums()}>
         {(album, index) => (
     <div
-    class="flex-none h-full w-spineWidth hover:w-hSpineWidth spine-outer"
+    class="flex-none h-full w-spineWidth"
     style={{
-      transform: loaded() ? "translateY(0)" : "translateY(100%)",
+      transform: loaded() ? "translateY(0)" : "translateY(100%)", 
       transition: `transform 0.85s ease-in-out ${index() * 60}ms, width 0.4s ease-out`,
+      'flex-shrink': 0,
+      width: expandedIndex() === index() ? "40%" : "var(--rectangle-width)",
     }}
+    onClick={() => handleClick(index())}
   >
             <Spine
               albumCover={album.images[0].url}
