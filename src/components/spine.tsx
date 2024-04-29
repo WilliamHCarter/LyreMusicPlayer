@@ -1,8 +1,13 @@
 import { createEffect, createSignal, type Component } from "solid-js";
 import { getAccentColor } from "./Helpers";
 import { desaturateRGBAdjusted } from "./Helpers";
+import { SongList } from "./SongList";
+import type { Song } from "./API";
 
 interface SpineProps {
+  open: boolean;
+  width: number;
+  songList: Song[];
   albumCover: string;
   miniCover: string;
   albumName: string;
@@ -30,21 +35,35 @@ const Spine: Component<SpineProps> = (props) => {
     >
       <div
         class="top-0 w-full pb-full relative"
-        style={`background-image: url(${props.miniCover}); background-size: cover;`}
+        style={`background-image: url(${props.miniCover}); background-size: cover; width: ${props.width}vw;`}
       >
         <img
           src={props.albumCover}
           alt="Album Cover"
-          class={`object-cover w-full h-full ${
+          class={`object-cover transition-opacity duration-500 ${
             isFullImageLoaded() ? "opacity-100" : "opacity-0"
-          } transition-opacity duration-500`}
+          }`}
+          style={{ width: `${props.width}vw` }}
           onload={handleFullImageLoad}
         />
       </div>
-      <div class="mt-4 relative whitespace-nowrap [writing-mode:vertical-rl]">
-        <div class="text-white text-3xl font-semibold">{props.albumName}</div>
-        <div class="text-white opacity-50">{props.artistName}</div>
-      </div>
+      {!props.open && (
+        <div class="mt-4 relative whitespace-nowrap [writing-mode:vertical-rl]">
+          <div class="text-white text-3xl font-semibold">{props.albumName}</div>
+          <div class="text-white opacity-50">{props.artistName}</div>
+        </div>
+      )}
+      {props.open && (
+        <div class="w-full px-8">
+          <div class="mt-4 relative whitespace-nowrap">
+            <div class="text-white text-3xl font-semibold">
+              {props.albumName}
+            </div>
+            <div class="text-white opacity-50">{props.artistName}</div>
+          </div>
+          <SongList songList={props.songList} />
+        </div>
+      )}
     </div>
   );
 };

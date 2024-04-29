@@ -1,7 +1,7 @@
 import type { Component } from "solid-js";
-import { createEffect, createSignal, For, onCleanup, onMount } from "solid-js";
+import { createEffect, createSignal, For, onMount } from "solid-js";
 import Spine from "./spine";
-import getAccessToken from "./API";
+import { getAccessToken, type Song } from "./API";
 
 const defaultAlbums = [
   "19bQiwEKhXUBJWY6oV3KZk",
@@ -27,6 +27,7 @@ interface Album {
   name: string;
   artists: { name: string }[];
   images: { url: string }[];
+  songs: Song[];
 }
 
 const Spines: Component = () => {
@@ -34,22 +35,26 @@ const Spines: Component = () => {
   const [mounted, setMounted] = createSignal(false);
   const [loaded, setLoaded] = createSignal(false);
   const [expandedIndex, setExpandedIndex] = createSignal<number | null>(null);
-
-
+  const [spineOpen, setSpineOpen] = createSignal<boolean[]>([]);
+  const [spineWidth, setSpineWidth] = createSignal(0);
+  
   onMount(() => {
     const storedAlbums = localStorage.getItem("defaultAlbums");
     if (storedAlbums) {
       setAlbums(JSON.parse(storedAlbums));
+      setSpineOpen(new Array(JSON.parse(storedAlbums).length).fill(false));
     } else {
       fetchAlbums(defaultAlbums);
     }
     setMounted(true);
+
   });
 
   createEffect(() => {
     if (mounted()) {
       setTimeout(() => {
         setLoaded(true);
+        setSpineWidth(100 / albums().length);
       }, 600);
     }
   });
@@ -71,6 +76,22 @@ const Spines: Component = () => {
 
       const albumsData = await Promise.all(albumPromises);
       setAlbums(albumsData as Album[]);
+      albumsData.forEach((album, index) => {
+          setAlbums((prev) => {
+            const songs = album.tracks.items.map((track: any) => ({
+              id: track.id,
+              title: track.name,
+              artist: track.artists[0].name,
+              duration: track.duration_ms,
+              album: album.name,
+              listens: track.popularity,
+            }));
+            const newAlbums = [...prev];
+            newAlbums[index].songs = songs;
+            return newAlbums;
+          });
+      });
+      setSpineOpen(new Array(albumsData.length).fill(false));
       localStorage.setItem("defaultAlbums", JSON.stringify(albumsData));
     } catch (error) {
       console.error("Error fetching albums:", error);
@@ -79,12 +100,14 @@ const Spines: Component = () => {
 
   const handleClick = (index: number) => {
     setExpandedIndex(prevIndex => prevIndex === index ? null : index);
+    setSpineOpen((prev) => prev.map((_, i) => i === index ? !prev[i] : false));
   };
-
+  
   return (
     <div class="relative w-screen h-screen overflow-hidden" style={`--rectangle-width: ${100 / albums().length}%`}>
       <div class="flex h-full spine-container" style={{     
-         transform: expandedIndex() ? "translateX(calc(-2*var(--rectangle-width)))" : "translateX(0)"
+         transform: expandedIndex() ? "translateX(calc(-2*var(--rectangle-width)))" : "translateX(0)",
+         transition: "transform 0.4s ease-out",
 }}>
       <For each={albums()}>
         {(album, index) => (
@@ -99,6 +122,9 @@ const Spines: Component = () => {
     onClick={() => handleClick(index())}
   >
             <Spine
+              open={spineOpen()[index()]}
+              width={spineWidth()}
+              songList={album.songs}
               albumCover={album.images[0].url}
               albumName={album.name}
               artistName={album.artists[0].name}
