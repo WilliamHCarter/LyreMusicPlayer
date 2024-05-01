@@ -117,7 +117,7 @@ const Spines: Component = () => {
       transform: loaded() ? "translateY(0)" : "translateY(100%)", 
       transition: `transform 0.85s ease-in-out ${index() * 60}ms, width 0.4s ease-out`,
       'flex-shrink': 0,
-      width: expandedIndex() === index() ? "40%" : "var(--rectangle-width)",
+      width: expandedIndex() === index() ? "60%" : "var(--rectangle-width)",
     }}
     onClick={() => handleClick(index())}
   >
