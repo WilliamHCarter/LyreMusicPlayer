@@ -3,6 +3,7 @@ import { getAccentColor } from "./Helpers";
 import { desaturateRGBAdjusted } from "./Helpers";
 import { SongList } from "./SongList";
 import type { Song } from "./API";
+import { songQueue, addToQueue } from './MusicPlayer';
 
 interface SpineProps {
   open: boolean;
@@ -40,7 +41,7 @@ const Spine: Component<SpineProps> = (props) => {
           'background-size': 'cover',
           width: props.open ? '18vw' : `6.25vw`,
           'margin-top': props.open ? '2rem' : '0%',
-          transition: 'width 0.4s ease-in-out, margin-top 0.4s ease-in-out',
+          transition: 'width 0.4s ease-in-out 0.1s, margin-top 0.4s ease-in-out',
         }}        
         >
         <img
@@ -52,14 +53,12 @@ const Spine: Component<SpineProps> = (props) => {
           onload={handleFullImageLoad}
         />
       </div>
-      {!props.open && (
-        <div class="mt-4 relative whitespace-nowrap [writing-mode:vertical-rl]">
+        <div class="mt-4 self-start ml-[1.3vw] whitespace-nowrap [writing-mode:vertical-rl]">
           <div class="text-white text-3xl font-semibold">{props.albumName}</div>
           <div class="text-white opacity-50">{props.artistName}</div>
         </div>
-      )}
       {props.open && (
-        <div class="w-full px-8 opacity-0 " style={{ transition: props.open ? 'opacity 0.4s ease-in':undefined }}>
+        <div class="w-full px-8 " style={{ transition: props.open ? 'opacity 0.4s ease-in 0.4s' : undefined, opacity: props.open ? 1 : 0 }}>
           <div class="mt-4 relative whitespace-nowrap">
             <div class="text-white text-3xl font-semibold">
               {props.albumName}

@@ -115,7 +115,7 @@ const Spines: Component = () => {
     class="flex-none h-full w-spineWidth"
     style={{
       transform: loaded() ? "translateY(0)" : "translateY(100%)", 
-      transition: `transform 0.85s ease-in-out ${index() * 60}ms, width 0.4s ease-out`,
+      transition: `transform 0.85s ease-in-out ${index() * 60}ms, width 0.5s ease-out`,
       'flex-shrink': 0,
       width: expandedIndex() === index() ? "60%" : "var(--rectangle-width)",
     }}

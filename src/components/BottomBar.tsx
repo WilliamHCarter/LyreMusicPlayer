@@ -6,6 +6,7 @@ import {
   ListMusic,
   ChevronDown,
 } from "lucide-solid";
+import { MusicPlayer } from "./MusicPlayer";
 
 interface BottomBarProps {
   albumCover: string;
@@ -68,9 +69,7 @@ return (
       </div>
 
       {/* Player Section */}
-      <div class="w-48 h-full bg-[#222] flex items-center justify-center w-[20vw]">
-        <Music class="text-white" />
-      </div>
+      <MusicPlayer />
     </div>
   );
 };

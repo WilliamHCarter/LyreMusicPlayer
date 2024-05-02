@@ -5,7 +5,7 @@ export const SongRow = (props: { song: Song }) => {
   const { song } = props;
   return (
     <>
-      <div class="flex items-center justify-between p-2">
+      <div class="flex items-center justify-between p-2 hover:bg-opacity-10 hover:bg-white transition duration-200">
         <div>
           <h3 class="text-lg font-semibold text-white">{song.title}</h3>
           <p class="text-sm text-white opacity-50">{song.artist}</p>
@@ -15,7 +15,7 @@ export const SongRow = (props: { song: Song }) => {
             {formatDuration(song.duration)}
           </p>
           <p class="text-sm text-white opacity-50">
-            {formatListens(song.listens)?? 0} listens
+            {formatListens(song.listens) ?? 0} listens
           </p>
         </div>
       </div>
@@ -27,8 +27,13 @@ export const SongRow = (props: { song: Song }) => {
 interface SongListProps {
   songList: Song[];
 }
+
 export const SongList = ({ songList }: SongListProps) => {
-  return <For each={songList}>{(song) => <SongRow song={song} />}</For>;
+  return (
+    <div class="max-h-[50%] overflow-y-auto">
+      <For each={songList}>{(song) => <SongRow song={song} />}</For>
+    </div>
+  );
 };
 
 // Helper functions
