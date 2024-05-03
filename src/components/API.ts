@@ -1,29 +1,37 @@
+const CLIENT_ID = "";
+const CLIENT_SECRET = "";
 
-const CLIENT_ID = '';
-const CLIENT_SECRET = '';
+//====================== Interfaces =======================
+export interface Track {
+  id: string;
+  albumImage: string;
+  artistName: string;
+  albumName: string;
+  songName: string;
+}
 
 export const getAccessToken = async () => {
-    try {
-        const response = await fetch('https://accounts.spotify.com/api/token', {
-            method: 'POST',
-            body: new URLSearchParams({
-                grant_type: 'client_credentials',
-            }),
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                Authorization: `Basic ${btoa(`${CLIENT_ID}:${CLIENT_SECRET}`)}`,
-            },
-        });
+  try {
+    const response = await fetch("https://accounts.spotify.com/api/token", {
+      method: "POST",
+      body: new URLSearchParams({
+        grant_type: "client_credentials",
+      }),
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `Basic ${btoa(`${CLIENT_ID}:${CLIENT_SECRET}`)}`,
+      },
+    });
 
-        const data = await response.json();
-        return data.access_token;
-    } catch (error) {
-        console.error('Error retrieving access token:', error);
-        throw error;
-    }
+    const data = await response.json();
+    return data.access_token;
+  } catch (error) {
+    console.error("Error retrieving access token:", error);
+    throw error;
+  }
 };
 
-const apiUrl = 'https://api.spotify.com/v1';
+const apiUrl = "https://api.spotify.com/v1";
 
 export interface Song {
   id: string;
@@ -35,7 +43,7 @@ export interface Song {
 }
 
 export const fetchAlbumSongs = async (albumId: string): Promise<Song[]> => {
-    const accessToken = await getAccessToken();
+  const accessToken = await getAccessToken();
   try {
     const response = await fetch(`${apiUrl}/albums/${albumId}/tracks`, {
       headers: {
@@ -68,69 +76,130 @@ export const fetchAlbumSongs = async (albumId: string): Promise<Song[]> => {
 
     return Promise.all(songPromises);
   } catch (error) {
-    console.error('Error fetching album songs:', error);
+    console.error("Error fetching album songs:", error);
     throw error;
   }
 };
 
 //==================== Song Management =====================
 export const addToQueue = async (trackUri: string) => {
-    const accessToken = await getAccessToken();
-    try {
-      await fetch(`https://api.spotify.com/v1/me/player/queue?uri=${encodeURIComponent(trackUri)}`, {
-        method: 'POST',
+  const accessToken = await getAccessToken();
+  try {
+    await fetch(
+      `https://api.spotify.com/v1/me/player/queue?uri=${encodeURIComponent(
+        trackUri
+      )}`,
+      {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
-      });
-    } catch (error) {
-      console.error('Error adding track to queue:', error);
-      throw error;
-    }
-  };
+      }
+    );
+  } catch (error) {
+    console.error("Error adding track to queue:", error);
+    throw error;
+  }
+};
 
-  export const getQueue = async (): Promise<any[]> => {
-    const accessToken = await getAccessToken();
-    try {
-      const response = await fetch(`https://api.spotify.com/v1/me/player/queue`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      const data = await response.json();
-      return data.queue;
-    } catch (error) {
-      console.error('Error getting queue:', error);
-      throw error;
-    }
-  };
+export const getQueue = async (): Promise<any[]> => {
+  const accessToken = await getAccessToken();
+  try {
+    const response = await fetch(`https://api.spotify.com/v1/me/player/queue`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    const data = await response.json();
+    return data.queue;
+  } catch (error) {
+    console.error("Error getting queue:", error);
+    throw error;
+  }
+};
 
-  export const playNext = async () => {
-    const accessToken = await getAccessToken();
-    try {
-      await fetch(`https://api.spotify.com/v1/me/player/next`, {
-        method: 'POST',
+export const playNext = async () => {
+  const accessToken = await getAccessToken();
+  try {
+    await fetch(`https://api.spotify.com/v1/me/player/next`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+  } catch (error) {
+    console.error("Error skipping to next track:", error);
+    throw error;
+  }
+};
+
+export const playPrevious = async () => {
+  const accessToken = await getAccessToken();
+  try {
+    await fetch(`https://api.spotify.com/v1/me/player/previous`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+  } catch (error) {
+    console.error("Error skipping to previous track:", error);
+    throw error;
+  }
+};
+
+export const playTrack = async () => {
+  const accessToken = await getAccessToken();
+  try {
+    await fetch(`https://api.spotify.com/v1/me/player/play`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+  } catch (error) {
+    console.error("Error playing track:", error);
+    throw error;
+  }
+};
+
+export const pauseTrack = async () => {
+  const accessToken = await getAccessToken();
+  try {
+    await fetch(`https://api.spotify.com/v1/me/player/pause`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+  } catch (error) {
+    console.error("Error pausing track:", error);
+    throw error;
+  }
+};
+
+export const getTrack = async (trackId: string): Promise<Track> => {
+  const accessToken = await getAccessToken();
+  try {
+    const response = await fetch(
+      `https://api.spotify.com/v1/tracks/${trackId}`,
+      {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
-      });
-    } catch (error) {
-      console.error('Error skipping to next track:', error);
-      throw error;
-    }
-  };
-  
-  export const playPrevious = async () => {
-    const accessToken = await getAccessToken();
-    try {
-      await fetch(`https://api.spotify.com/v1/me/player/previous`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-    } catch (error) {
-      console.error('Error skipping to previous track:', error);
-      throw error;
-    }
-  };
+      }
+    );
+    const data = await response.json();
+    const track: Track = {
+      id: data.id,
+      albumImage: data.album.images[0].url,
+      artistName: data.artists[0].name,
+      albumName: data.album.name,
+      songName: data.name,
+    };
+    return track;
+  } catch (error) {
+    console.error("Error fetching track:", error);
+    throw error;
+  }
+};

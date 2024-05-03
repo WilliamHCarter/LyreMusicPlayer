@@ -3,7 +3,6 @@ import { getAccentColor } from "./Helpers";
 import { desaturateRGBAdjusted } from "./Helpers";
 import { SongList } from "./SongList";
 import type { Song } from "./API";
-import { songQueue, addToQueue } from "./MusicPlayer";
 
 interface SpineProps {
   open: boolean;
