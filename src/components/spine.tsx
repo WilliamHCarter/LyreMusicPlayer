@@ -33,6 +33,7 @@ const Spine: Component<SpineProps> = (props) => {
       style={`background-color: ${accentColor()};`}
       class="flex flex-col items-center h-full w-full relative grow hover:grow-[2]"
     >
+      {/* Dynamic Image */}
       <div
         class=" relative"
         style={{
@@ -64,12 +65,13 @@ const Spine: Component<SpineProps> = (props) => {
           <div class="text-white opacity-50">{props.artistName}</div>
         </div>
       </div>
-
-      {!props.open && (
+      {/* Song List */}
+      {(
         <div
-          class="w-full px-8 "
+          class="w-full px-8 absolute"
           style={{
-            transition: "opacity 0.4s ease-in 0.4s",
+            transition: `opacity ${props.open? "0.4s" : "0.2s"} ease-in ${props.open? "0.2s" : "0.0s"}, transform 0.85s ease-in-out`,
+            transform: props.open ? "translateY(32%)" : "translateY(70%)", 
             opacity: props.open ? 1 : 0,
           }}
         >

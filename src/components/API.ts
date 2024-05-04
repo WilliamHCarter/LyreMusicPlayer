@@ -118,66 +118,39 @@ export const getQueue = async (): Promise<any[]> => {
   }
 };
 
-export const playNext = async () => {
-  const accessToken = await getAccessToken();
-  try {
-    await fetch(`https://api.spotify.com/v1/me/player/next`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-  } catch (error) {
-    console.error("Error skipping to next track:", error);
-    throw error;
-  }
-};
-
-export const playPrevious = async () => {
-  const accessToken = await getAccessToken();
-  try {
-    await fetch(`https://api.spotify.com/v1/me/player/previous`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-  } catch (error) {
-    console.error("Error skipping to previous track:", error);
-    throw error;
-  }
-};
-
-export const playTrack = async () => {
-  const accessToken = await getAccessToken();
-  try {
-    await fetch(`https://api.spotify.com/v1/me/player/play`, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-  } catch (error) {
-    console.error("Error playing track:", error);
-    throw error;
-  }
-};
-
-export const pauseTrack = async () => {
-  const accessToken = await getAccessToken();
-  try {
-    await fetch(`https://api.spotify.com/v1/me/player/pause`, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-  } catch (error) {
-    console.error("Error pausing track:", error);
-    throw error;
-  }
-};
-
+const makeSpotifyRequest = async (endpoint: string, method: string) => {
+    const accessToken = await getAccessToken();
+    try {
+      const response = await fetch(`https://api.spotify.com/v1/me/player/${endpoint}`, {
+        method: method,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Spotify API request failed: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error(`Error making Spotify API request to ${endpoint}:`, error);
+      throw error;
+    }
+  };
+  
+  export const playNext = async () => {
+    await makeSpotifyRequest("next", "POST");
+  };
+  
+  export const playPrevious = async () => {
+    await makeSpotifyRequest("previous", "POST");
+  };
+  
+  export const playTrack = async () => {
+    await makeSpotifyRequest("play", "PUT");
+  };
+  
+  export const pauseTrack = async () => {
+    await makeSpotifyRequest("pause", "PUT");
+  };
 export const getTrack = async (trackId: string): Promise<Track> => {
   const accessToken = await getAccessToken();
   try {

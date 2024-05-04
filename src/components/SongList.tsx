@@ -30,7 +30,7 @@ interface SongListProps {
 
 export const SongList = ({ songList }: SongListProps) => {
   return (
-    <div class="max-h-[50%] overflow-y-auto">
+    <div class="max-h-[100vh] overflow-y-auto">
       <For each={songList}>{(song) => <SongRow song={song} />}</For>
     </div>
   );
