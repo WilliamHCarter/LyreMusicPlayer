@@ -99,9 +99,19 @@ const Spines: Component = () => {
   };
 
   const handleClick = (index: number) => {
+    let isSameIndex: boolean = expandedIndex() === index;
+    if (!isSameIndex && spineOpen()[index] === false) {
+      closeSpine(index);
+    }
+  };
+
+  const closeSpine = (index: number) => {
     setExpandedIndex(prevIndex => prevIndex === index ? null : index);
     setSpineOpen((prev) => prev.map((_, i) => i === index ? !prev[i] : false));
-  };
+    console.log("spine closed");
+  }
+
+
   
   return (
     <div class="relative w-screen h-screen overflow-hidden" style={`--rectangle-width: ${100 / albums().length}%`}>
@@ -129,6 +139,7 @@ const Spines: Component = () => {
               albumName={album.name}
               artistName={album.artists[0].name}
               miniCover={album.images[2].url}
+              closeSpine={() => closeSpine(expandedIndex()!)}
             />
           </div>
         )}

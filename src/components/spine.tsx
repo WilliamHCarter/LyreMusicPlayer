@@ -3,6 +3,7 @@ import { getAccentColor } from "./Helpers";
 import { desaturateRGBAdjusted } from "./Helpers";
 import { SongList } from "./SongList";
 import type { Song } from "./API";
+import { X } from "lucide-solid";
 
 interface SpineProps {
   open: boolean;
@@ -12,6 +13,8 @@ interface SpineProps {
   miniCover: string;
   albumName: string;
   artistName: string;
+  closeSpine: (index: number) => void;
+
 }
 
 const Spine: Component<SpineProps> = (props) => {
@@ -33,9 +36,17 @@ const Spine: Component<SpineProps> = (props) => {
       style={`background-color: ${accentColor()};`}
       class="flex flex-col items-center h-full w-full relative grow hover:grow-[2]"
     >
+      {props.open && (
+        <button
+          class="absolute top-4 right-4 text-white hover:text-gray-200"
+          onClick={() => props.closeSpine}
+          >
+          <X size={24} />
+        </button>
+      )}
       {/* Dynamic Image */}
       <div
-        class=" relative"
+        class="relative"
         style={{
           "background-image": `url(${props.miniCover})`,
           "background-size": "cover",
@@ -54,9 +65,12 @@ const Spine: Component<SpineProps> = (props) => {
           onload={handleFullImageLoad}
         />
       </div>
-      <div class="absolute self-start mt-[6.25vw]"
+      <div
+        class="absolute self-start mt-[6.25vw]"
         style={{
-          transition: `opacity 0.2s ease-in-out ${!props.open ? "0.5s" : "0.1s"}`,
+          transition: `opacity 0.2s ease-in-out ${
+            !props.open ? "0.5s" : "0.1s"
+          }`,
           opacity: !props.open ? 1 : 0,
         }}
       >
@@ -66,12 +80,14 @@ const Spine: Component<SpineProps> = (props) => {
         </div>
       </div>
       {/* Song List */}
-      {(
+      {
         <div
           class="w-full px-8 absolute"
           style={{
-            transition: `opacity ${props.open? "0.4s" : "0.2s"} ease-in ${props.open? "0.2s" : "0.0s"}, transform 0.85s ease-in-out`,
-            transform: props.open ? "translateY(32%)" : "translateY(70%)", 
+            transition: `opacity ${props.open ? "0.4s" : "0.2s"} ease-in ${
+              props.open ? "0.2s" : "0.0s"
+            }, transform 0.85s ease-in-out`,
+            transform: props.open ? "translateY(32%)" : "translateY(70%)",
             opacity: props.open ? 1 : 0,
           }}
         >
@@ -83,7 +99,7 @@ const Spine: Component<SpineProps> = (props) => {
           </div>
           <SongList songList={props.songList} />
         </div>
-      )}
+      }
     </div>
   );
 };
