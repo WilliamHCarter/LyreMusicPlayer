@@ -13,8 +13,8 @@ interface SpineProps {
   miniCover: string;
   albumName: string;
   artistName: string;
-  closeSpine: (index: number) => void;
-
+  closeSpine: () => void;
+  index: number;
 }
 
 const Spine: Component<SpineProps> = (props) => {
@@ -36,14 +36,14 @@ const Spine: Component<SpineProps> = (props) => {
       style={`background-color: ${accentColor()};`}
       class="flex flex-col items-center h-full w-full relative grow hover:grow-[2]"
     >
-      {props.open && (
-        <button
-          class="absolute top-4 right-4 text-white hover:text-gray-200"
-          onClick={() => props.closeSpine}
-          >
-          <X size={24} />
-        </button>
-      )}
+    {props.open && (
+      <button
+        class="absolute top-4 right-4 text-white hover:text-gray-200"
+        onClick={() => props.closeSpine()}
+      >
+        <X size={24} />
+      </button>
+    )}
       {/* Dynamic Image */}
       <div
         class="relative"
