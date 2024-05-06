@@ -121,9 +121,9 @@ const Spines: Component = () => {
         class="flex h-full spine-container"
         style={{
           transform: expandedIndex()
-            ? "translateX(calc(-2*var(--rectangle-width)))"
+            ? `translateX(calc(-1.6*var(--rectangle-width)*(0.36*${expandedIndex()})))`
             : "translateX(0)",
-          transition: "transform 0.4s ease-out",
+          transition: "transform 0.5s ease-out",
         }}
       >
         <For each={albums()}>

@@ -50,7 +50,7 @@ const Spine: Component<SpineProps> = (props) => {
         style={{
           "background-image": `url(${props.miniCover})`,
           "background-size": "cover",
-          width: props.open ? "18vw" : `6.25vw`,
+          width: props.open ? "32vh" : `6.25vw`,
           "margin-top": props.open ? "2rem" : "0%",
           transition:
             "width 0.4s ease-in-out 0.2s, margin-top 0.4s ease-in-out",
@@ -74,7 +74,7 @@ const Spine: Component<SpineProps> = (props) => {
           opacity: !props.open ? 1 : 0,
         }}
       >
-        <div class="mt-4 self-start ml-[1.3vw] whitespace-nowrap [writing-mode:vertical-rl]">
+        <div class="mt-4 self-start ml-[1.3vw] whitespace-nowrap [writing-mode:vertical-rl] pointer-events-none">
           <div class="text-white text-3xl font-semibold">{props.albumName}</div>
           <div class="text-white opacity-50">{props.artistName}</div>
         </div>
@@ -87,7 +87,7 @@ const Spine: Component<SpineProps> = (props) => {
             transition: `opacity ${props.open ? "0.4s" : "0.2s"} ease-in ${
               props.open ? "0.2s" : "0.0s"
             }, transform 0.85s ease-in-out`,
-            transform: props.open ? "translateY(32%)" : "translateY(70%)",
+            transform: props.open ? "translateY(40vh)" : "translateY(70vh)",
             opacity: props.open ? 1 : 0,
           }}
         >
