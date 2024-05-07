@@ -1,12 +1,38 @@
 import { createSignal, createEffect, Show } from 'solid-js';
 import { Play, Pause, SkipForward, SkipBack } from 'lucide-solid';
 import { playTrack, pauseTrack, playNext, playPrevious, getTrack, type Track } from './API';
+import { onMount } from 'solid-js';
 
 export const MusicPlayer = () => {
   const [isPlaying, setIsPlaying] = createSignal(false);
   const [isHovered, setIsHovered] = createSignal(false);
   const [currentTrackId, setCurrentTrackId] = createSignal('1nmxPH5RODwmPwfLOnyaAt');
   const [currentTrack, setCurrentTrack] = createSignal<Track | null>(null);
+
+
+  let player: Spotify.Player;
+
+  onMount(() => {
+    const script = document.createElement('script');
+    script.src = 'https://sdk.scdn.co/spotify-player.js';
+    script.async = true;
+    document.body.appendChild(script);
+
+    window.onSpotifyWebPlaybackSDKReady = () => {
+      player = new Spotify.Player({
+        name: 'Your Web App Name',
+        getOAuthToken: (cb) => {
+
+          const token = 'your_access_token';
+          cb(token);
+        },
+      });
+
+      // Connect to the player
+      player.connect();
+    };
+  });
+
 
   createEffect(async () => {
     try {
@@ -19,10 +45,10 @@ export const MusicPlayer = () => {
 
   const togglePlayPause = () => {
     if (isPlaying()) {
-      pauseTrack();
+      player.pause();
       setIsPlaying(false);
     } else {
-      playTrack();
+      player.resume();
       setIsPlaying(true);
     }
   };
@@ -56,8 +82,8 @@ export const MusicPlayer = () => {
           </div>
         </div>
       <div class="absolute right-4 flex items-center space-x-4">
-        <SkipBack class="text-white cursor-pointer" fill="white" size={18} onClick={playPrevious} />
-        <SkipForward class="text-white cursor-pointer" fill="white" size={18} onClick={playNext} />
+        <SkipBack class="text-white cursor-pointer" fill="white" size={18} onClick={player.previousTrack()} />
+        <SkipForward class="text-white cursor-pointer" fill="white" size={18} onClick={player.nextTrack()} />
       </div>
     </div>
   );

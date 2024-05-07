@@ -115,7 +115,7 @@ const Spines: Component = () => {
   return (
     <div
       class="relative w-screen h-screen overflow-hidden"
-      style={`--rectangle-width: ${100 / albums().length}%`}
+      style={`--rectangle-width: ${100 / Math.min(albums().length, 16)}%`}
     >
       <div
         class="flex h-full spine-container"
