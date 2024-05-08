@@ -7,6 +7,8 @@ import {
   ChevronDown,
 } from "lucide-solid";
 import { MusicPlayer } from "./MusicPlayer";
+import AuthHandler, { isAuthorizing, setIsAuthorizing } from "./AuthHandler";
+
 
 interface BottomBarProps {
   albumCover: string;
@@ -32,7 +34,7 @@ return (
     >
       <div class="flex items-center justify-start h-full">
         {/* Account Section */}
-        <div class="flex items-center px-2 gap-2">
+        <div class="flex items-center px-2 gap-2" onClick={() => setIsAuthorizing(true)}>
           <CircleUserRound class="text-white mr-2" />
           <span class="text-white">Log In</span>
           <ChevronDown class="text-white ml-8" />
@@ -70,6 +72,7 @@ return (
 
       {/* Player Section */}
       <MusicPlayer />
+      <AuthHandler />
     </div>
   );
 };
