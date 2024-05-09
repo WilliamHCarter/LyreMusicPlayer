@@ -1,25 +1,25 @@
 import { createEffect, createSignal, onMount } from "solid-js";
-import { exchangeCodeForToken } from "./API";
+import { exchangeCodeForToken, login } from "./API";
 import { LoaderCircle } from "lucide-solid";
 
 export const [isAuthorizing, setIsAuthorizing] = createSignal(false);
-
+export const [token, setToken] = createSignal("");
 const AuthHandler = () => {
-//   onMount(() => {
-//     const urlParams = new URLSearchParams(window.location.search);
-//     const code = urlParams.get("code");
-//     const state = urlParams.get("state");
-//     const storedState = localStorage.getItem("spotifyAuthState");
-
-//     if (code && state && state === storedState) {
-//       setIsAuthorizing(true);
-//       //exchangeCodeForToken(code);
-//     }
-//   });
+  onMount(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+    const state = urlParams.get("state");
+    const storedState = localStorage.getItem("spotifyAuthState");
+    if (code && state && state === storedState) {
+        exchangeCodeForToken(code);
+    }
+  });
 
 createEffect(() => {
     if (isAuthorizing()) {
         console.log("Authorizing...");
+        login();
+        setIsAuthorizing(false);
     } else {
         console.log("Not Authorizing...");
     }

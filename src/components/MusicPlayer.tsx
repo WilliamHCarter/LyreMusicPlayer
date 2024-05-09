@@ -20,13 +20,13 @@ export const MusicPlayer = () => {
     script.async = true;
     document.body.appendChild(script);
 
-    if (isConnected()) {
+    if (isConnected() || localStorage.getItem("spotifyAccessToken")) {
       window.onSpotifyWebPlaybackSDKReady = () => {
         if (window.Spotify) {
           player = new window.Spotify.Player({
-            name: "Lyre",
+            name: "Lyre Music Player",
             getOAuthToken: (callback: (token: string) => void) => {
-              const token = "";
+              const token = localStorage.getItem("spotifyAccessToken") as string;
               callback(token);
             },
           });

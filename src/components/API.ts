@@ -1,5 +1,6 @@
 const CLIENT_ID = "";
 const CLIENT_SECRET = "";
+const REDIRECT_URI = "http://localhost:4321";
 
 //====================== Interfaces =======================
 export interface Track {
@@ -8,6 +9,17 @@ export interface Track {
   artistName: string;
   albumName: string;
   songName: string;
+}
+
+const apiUrl = "https://api.spotify.com/v1";
+
+export interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  duration: number;
+  album: string;
+  listens: number;
 }
 
 export const getAccessToken = async () => {
@@ -30,17 +42,6 @@ export const getAccessToken = async () => {
     throw error;
   }
 };
-
-const apiUrl = "https://api.spotify.com/v1";
-
-export interface Song {
-  id: string;
-  title: string;
-  artist: string;
-  duration: number;
-  album: string;
-  listens: number;
-}
 
 export const fetchAlbumSongs = async (albumId: string): Promise<Song[]> => {
   const accessToken = await getAccessToken();
@@ -136,21 +137,6 @@ const makeSpotifyRequest = async (endpoint: string, method: string) => {
     }
   };
   
-  export const playNext = async () => {
-    await makeSpotifyRequest("next", "POST");
-  };
-  
-  export const playPrevious = async () => {
-    await makeSpotifyRequest("previous", "POST");
-  };
-  
-  export const playTrack = async () => {
-    await makeSpotifyRequest("play", "PUT");
-  };
-  
-  export const pauseTrack = async () => {
-    await makeSpotifyRequest("pause", "PUT");
-  };
 export const getTrack = async (trackId: string): Promise<Track> => {
   const accessToken = await getAccessToken();
   try {
@@ -174,5 +160,75 @@ export const getTrack = async (trackId: string): Promise<Track> => {
   } catch (error) {
     console.error("Error fetching track:", error);
     throw error;
+  }
+};
+
+
+//==================== Login and Auth  =====================
+
+const scopes = ['user-read-private', 'user-read-email'];
+
+export const login = () => {
+  const state = generateRandomString(16);
+  const authUrl = 'https://accounts.spotify.com/authorize?' +
+    new URLSearchParams({
+      response_type: 'code',
+      client_id: CLIENT_ID,
+      scope: scopes.join(' '),
+      redirect_uri: 'http://localhost:4321',
+      state: state,
+    });
+
+  localStorage.setItem('spotifyAuthState', state);
+
+  window.location.href = authUrl;
+  console.log('Redirecting to Spotify login...');
+};
+
+const generateRandomString = (length: number) => {
+  let text = '';
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  for (let i = 0; i < length; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
+};
+
+export const exchangeCodeForToken = async (code: string) => {
+  const tokenUrl = 'https://accounts.spotify.com/api/token';
+  const body = new URLSearchParams({
+    grant_type: 'authorization_code',
+    code: code,
+    redirect_uri: 'http://localhost:4321',
+    client_id: CLIENT_ID,
+    client_secret: CLIENT_SECRET,
+  });
+
+  try {
+    const response = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: body.toString(),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const accessToken = data.access_token;
+      const refreshToken = data.refresh_token;
+
+      // Store the access token and refresh token securely
+      localStorage.setItem('spotifyAccessToken', accessToken);
+      localStorage.setItem('spotifyRefreshToken', refreshToken);
+
+      console.log('Access token:', accessToken);
+      console.log('Refresh token:', refreshToken);
+    } else {
+      console.error('Error exchanging code for token:', response.status);
+    }
+  } catch (error) {
+    console.error('Error exchanging code for token:', error);
   }
 };
