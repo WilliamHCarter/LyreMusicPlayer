@@ -100,22 +100,21 @@ const Spines: Component = () => {
   const handleClick = (index: number) => {
     let isSameIndex: boolean = expandedIndex() === index;
     if (!isSameIndex && spineOpen()[index] === false) {
-      closeSpine(index);
+      toggleSpine(index);
     }
   };
 
-  const closeSpine = (index: number) => {
+  const toggleSpine = (index: number) => {
     setExpandedIndex((prevIndex) => (prevIndex === index ? null : index));
     setSpineOpen((prev) =>
       prev.map((_, i) => (i === index ? !prev[i] : false))
     );
-    console.log("spine closed");
   };
 
   return (
     <div
-      class="relative w-screen h-screen overflow-hidden"
-      style={`--rectangle-width: ${100 / Math.min(albums().length, 16)}%`}
+      class="relative w-screen h-screen overflow-x-scroll overflow-y-hidden"
+      style={`--rectangle-width: ${100 / Math.min(albums().length, 16)}vw`}
     >
       <div
         class="flex h-full spine-container"
@@ -151,7 +150,7 @@ const Spines: Component = () => {
                 albumName={album.name}
                 artistName={album.artists[0].name}
                 miniCover={album.images[2].url}
-                closeSpine={() => closeSpine(index())}
+                closeSpine={() => toggleSpine(index())}
                 index={index()}
               />
             </div>
