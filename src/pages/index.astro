@@ -2,10 +2,12 @@
 import Layout from "../layouts/Layout.astro";
 import Spines from "../components/spines";
 import BottomBar from "../components/BottomBar";
+import Carousel from "../components/Carousel";
 ---
 
 <Layout title="Lyre Music Player">
-  <Spines client:load />
+  <!-- <Spines client:load /> -->
+  <Carousel client:load />
   <BottomBar
     albumCover={"albumCover"}
     miniCover={"miniCover"}
