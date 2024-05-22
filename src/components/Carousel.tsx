@@ -1,7 +1,6 @@
 import { createEffect, createSignal, For, onMount, type Signal } from "solid-js";
 import type { Song } from "./API";
 import { desaturateRGBAdjusted, getAccentColor } from "./Helpers";
-import { set } from "astro/zod";
 
 //Dynamic Album Cover
 const CCover = (props: { albumCover: string; miniAlbumCover: string }) => {
@@ -42,6 +41,9 @@ const CItem = (props: CItemProps) => {
 
   const handleClick = () => {
     setExpanded(!expanded());
+    console.log('clicked', props.index)
+    props.setSpineOpen(props.index);
+    console.log("spineOpen", props.spineOpen)
   };
 
   //Get accent color for spine
@@ -64,7 +66,7 @@ const CItem = (props: CItemProps) => {
 
   return (
     <div
-      class={`inline-block h-full`}
+      class={`inline-block h-full animate-slide-up`}
       style={{
         width: expanded() ? "32vh" : `6.25vw`,
         "background-color": accentColor(),
