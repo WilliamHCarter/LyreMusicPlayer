@@ -1,5 +1,5 @@
-const CLIENT_ID = "";
-const CLIENT_SECRET = "";
+const CLIENT_ID = "9a3ddce35111474088a10b319a4969d6";
+const CLIENT_SECRET = "5b8ac919fc1c45cb94388a3771ee1feb";
 const REDIRECT_URI = "http://localhost:4321";
 
 //====================== Interfaces =======================

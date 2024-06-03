@@ -1,6 +1,7 @@
 import { createEffect, createSignal, For, onMount, type Signal } from "solid-js";
 import type { Song } from "./API";
 import { desaturateRGBAdjusted, getAccentColor } from "./Helpers";
+import { getDelayClass } from "./Animations";
 
 //Dynamic Album Cover
 const CCover = (props: { albumCover: string; miniAlbumCover: string }) => {
@@ -70,6 +71,8 @@ const CItem = (props: CItemProps) => {
       style={{
         width: expanded() ? "32vh" : `6.25vw`,
         "background-color": accentColor(),
+        "animation-delay": `${getDelayClass(props.index)}ms`,
+        transition: "width 0.4s ease-in-out 0.2s, margin-top 0.01s ease-in-out",
       }}
       onClick={handleClick}
     >

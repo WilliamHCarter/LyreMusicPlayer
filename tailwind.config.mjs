@@ -10,7 +10,7 @@ export default {
         },
       },
       animation: {
-        "slide-up": "slideUp 0.85s ease-in-out",
+        "slide-up": "slideUp 0.85s ease-in-out forwards",
       },
       //================================
       flexGrow: {
