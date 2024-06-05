@@ -21,6 +21,7 @@ export const MusicPlayer = () => {
     document.body.appendChild(script);
 
     if (isConnected() || localStorage.getItem("spotifyAccessToken")) {
+      console.log("Spotify connecting...");
       window.onSpotifyWebPlaybackSDKReady = () => {
         if (window.Spotify) {
           player = new window.Spotify.Player({
