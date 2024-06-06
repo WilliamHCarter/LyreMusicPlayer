@@ -12,6 +12,7 @@
   "dependencies": {
     "@astrojs/check": "^0.5.10",
     "@astrojs/tailwind": "^5.1.0",
+    "@tanstack/solid-query": "^5.40.1",
     "astro": "^4.6.3",
     "lucide-solid": "^0.372.0",
     "solid-js": "^1.8.16",

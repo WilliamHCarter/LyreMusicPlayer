@@ -2,6 +2,7 @@ import type { Component } from "solid-js";
 import { createEffect, createSignal, For, onMount } from "solid-js";
 import Spine from "./spine";
 import { getAccessToken, type Song } from "./API";
+import { createQuery } from "@tanstack/solid-query";
 
 const defaultAlbums = [
   "19bQiwEKhXUBJWY6oV3KZk",
@@ -59,44 +60,26 @@ const Spines: Component = () => {
   });
 
   const fetchAlbums = async (albumIds: string[]) => {
-    try {
-      const accessToken = await getAccessToken();
-      const apiUrl = "https://api.spotify.com/v1/albums";
+    const accessToken = await getAccessToken();
+    const apiUrl = "https://api.spotify.com/v1/albums";
 
-      const albumPromises = albumIds.map(async (albumId) => {
-        const response = await fetch(`${apiUrl}/${albumId}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        const data = await response.json();
-        return data;
+    const albumPromises = albumIds.map(async (albumId) => {
+      const response = await fetch(`${apiUrl}/${albumId}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
+      const data = await response.json();
+      return data;
+    });
 
-      const albumsData = await Promise.all(albumPromises);
-      setAlbums(albumsData as Album[]);
-      albumsData.forEach((album, index) => {
-        setAlbums((prev) => {
-          const songs = album.tracks.items.map((track: any) => ({
-            id: track.id,
-            title: track.name,
-            artist: track.artists[0].name,
-            duration: track.duration_ms,
-            album: album.name,
-            listens: track.popularity,
-          }));
-          const newAlbums = [...prev];
-          newAlbums[index].songs = songs;
-          return newAlbums;
-        });
-      });
-      setSpineOpen(new Array(albumsData.length).fill(false));
-      localStorage.setItem("defaultAlbums", JSON.stringify(albumsData));
-    } catch (error) {
-      console.error("Error fetching albums:", error);
-    }
+    const albumsData = await Promise.all(albumPromises);
+    return albumsData as Album[];
   };
 
+  const useAlbums = (albumIds: string[]) => {
+    return createQuery(() => (["albums", albumIds], fetchAlbums(albumIds)));
+  };
   const handleClick = (index: number) => {
     let isSameIndex: boolean = expandedIndex() === index;
     if (!isSameIndex && spineOpen()[index] === false) {

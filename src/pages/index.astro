@@ -3,19 +3,23 @@ import Layout from "../layouts/Layout.astro";
 import Spines from "../components/spines";
 import BottomBar from "../components/BottomBar";
 import Carousel from "../components/Carousel";
+import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
+const queryClient = new QueryClient();
 ---
 
-<Layout title="Lyre Music Player">
-  <!-- <Spines client:load /> -->
-  <Carousel client:load />
-  <BottomBar
-    albumCover={"albumCover"}
-    miniCover={"miniCover"}
-    albumName={"albumName"}
-    artistName={"artistName"}
-    client:load
-  />
-</Layout>
+<QueryClientProvider client={queryClient}>
+  <Layout title="Lyre Music Player">
+    <!-- <Spines client:load /> -->
+    <Carousel client:load />
+    <BottomBar
+      albumCover={"albumCover"}
+      miniCover={"miniCover"}
+      albumName={"albumName"}
+      artistName={"artistName"}
+      client:load
+    />
+  </Layout>
+</QueryClientProvider>
 
 <style>
   main {
@@ -29,4 +33,5 @@ import Carousel from "../components/Carousel";
   }
 </style>
 
-<script src="https://sdk.scdn.co/spotify-player.js"></script>
+<script src="https://sdk.scdn.co/spotify-player.js">
+</script>
