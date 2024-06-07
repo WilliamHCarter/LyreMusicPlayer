@@ -1,5 +1,5 @@
 import type { Component } from "solid-js";
-import { createEffect, createSignal, For, onMount } from "solid-js";
+import { createEffect, createSignal, For, Match, onMount, Switch } from "solid-js";
 import Spine from "./spine";
 import { getAccessToken, type Song } from "./API";
 import { createQuery } from "@tanstack/solid-query";
@@ -23,6 +23,31 @@ const defaultAlbums = [
   "4m2880jivSbbyEGAKfITCa",
 ];
 
+const fetchAlbums = async (albumIds: string[]) => {
+  const accessToken = await getAccessToken();
+  const apiUrl = "https://api.spotify.com/v1/albums";
+
+  const albumPromises = albumIds.map(async (albumId) => {
+    const response = await fetch(`${apiUrl}/${albumId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    const data = await response.json();
+    return data;
+  });
+
+  const albumsData = await Promise.all(albumPromises);
+  return albumsData as Album[];
+};
+
+const useAlbums = (albumIds: string[]) => {
+  return createQuery(() => ({
+    queryKey: ["albums", albumIds],
+    queryFn: () => fetchAlbums(albumIds)
+  }));
+};
+
 interface Album {
   id: string;
   name: string;
@@ -32,54 +57,25 @@ interface Album {
 }
 
 const Spines: Component = () => {
-  const [albums, setAlbums] = createSignal<Album[]>([]);
   const [mounted, setMounted] = createSignal(false);
-  const [loaded, setLoaded] = createSignal(false);
   const [expandedIndex, setExpandedIndex] = createSignal<number | null>(null);
   const [spineOpen, setSpineOpen] = createSignal<boolean[]>([]);
   const [spineWidth, setSpineWidth] = createSignal(0);
 
+  const query = useAlbums(defaultAlbums);
+
   onMount(() => {
-    const storedAlbums = localStorage.getItem("defaultAlbums");
-    if (storedAlbums) {
-      setAlbums(JSON.parse(storedAlbums));
-      setSpineOpen(new Array(JSON.parse(storedAlbums).length).fill(false));
-    } else {
-      fetchAlbums(defaultAlbums);
-    }
     setMounted(true);
   });
 
   createEffect(() => {
-    if (mounted()) {
+    if (mounted() && query.isSuccess) {
       setTimeout(() => {
-        setLoaded(true);
-        setSpineWidth(100 / albums().length);
+        setSpineOpen(new Array(query.data.length).fill(false));
+        setSpineWidth(100 / query.data.length);
       }, 300);
     }
   });
-
-  const fetchAlbums = async (albumIds: string[]) => {
-    const accessToken = await getAccessToken();
-    const apiUrl = "https://api.spotify.com/v1/albums";
-
-    const albumPromises = albumIds.map(async (albumId) => {
-      const response = await fetch(`${apiUrl}/${albumId}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      const data = await response.json();
-      return data;
-    });
-
-    const albumsData = await Promise.all(albumPromises);
-    return albumsData as Album[];
-  };
-
-  const useAlbums = (albumIds: string[]) => {
-    return createQuery(() => (["albums", albumIds], fetchAlbums(albumIds)));
-  };
   const handleClick = (index: number) => {
     let isSameIndex: boolean = expandedIndex() === index;
     if (!isSameIndex && spineOpen()[index] === false) {
@@ -97,49 +93,56 @@ const Spines: Component = () => {
   return (
     <div
       class="relative w-screen h-screen overflow-x-scroll overflow-y-hidden"
-      style={`--rectangle-width: ${100 / Math.min(albums().length, 16)}vw`}
+      style={`--rectangle-width: ${100 / Math.min(query.data?.length || 0, 16)}vw`}
     >
-      <div
-        class="flex h-full spine-container"
-        style={{
-          transform: expandedIndex()
-            ? `translateX(calc(-1.6*var(--rectangle-width)*(0.36*${expandedIndex()})))`
-            : "translateX(0)",
-          transition: "transform 0.5s ease-out",
-        }}
-      >
-        <For each={albums()}>
-          {(album, index) => (
-            <div
-              class="flex-none h-full w-spineWidth"
-              style={{
-                transform: loaded() ? "translateY(0)" : "translateY(100%)",
-                transition: `transform 0.85s ease-in-out ${
-                  index() * 60
-                }ms, width 0.5s ease-out`,
-                "flex-shrink": 0,
-                width:
-                  expandedIndex() === index()
-                    ? "60%"
-                    : "var(--rectangle-width)",
-              }}
-              onClick={() => handleClick(index())}
-            >
-              <Spine
-                open={spineOpen()[index()]}
-                width={spineWidth()}
-                songList={album.songs}
-                albumCover={album.images[0].url}
-                albumName={album.name}
-                artistName={album.artists[0].name}
-                miniCover={album.images[2].url}
-                closeSpine={() => toggleSpine(index())}
-                index={index()}
-              />
-            </div>
-          )}
-        </For>
-      </div>
+      <Switch>
+        <Match when={query.isLoading}>
+          <div class="flex items-center justify-center h-full">
+            <div class="text-2xl">Loading...</div>
+          </div>
+        </Match>
+        <Match when={query.isError}>
+          <div class="flex items-center justify-center h-full">
+            <div class="text-2xl text-red-500">Error fetching albums: {query!.error!.message}</div>
+          </div>
+        </Match>
+        <Match when={query.isSuccess}>
+          <div
+            class="flex h-full spine-container"
+            style={{
+              transform: expandedIndex()
+                ? `translateX(calc(-1.6*var(--rectangle-width)*(0.36*${expandedIndex()})))`
+                : 'translateX(0)',
+              transition: 'transform 0.5s ease-out',
+            }}
+          >
+            {query!.data!.map((album, index) => (
+              <div
+                class="flex-none h-full w-spineWidth"
+                style={{
+                  transform: mounted() ? 'translateY(0)' : 'translateY(100%)',
+                  transition: `transform 0.85s ease-in-out ${index * 60}ms, width 0.5s ease-out`,
+                  'flex-shrink': 0,
+                  width: expandedIndex() === index ? '60%' : 'var(--rectangle-width)',
+                }}
+                onClick={() => handleClick(index)}
+              >
+                <Spine
+                  open={spineOpen()[index]}
+                  width={spineWidth()}
+                  songList={album.songs}
+                  albumCover={album.images[0].url}
+                  albumName={album.name}
+                  artistName={album.artists[0].name}
+                  miniCover={album.images[2].url}
+                  closeSpine={() => toggleSpine(index)}
+                  index={index}
+                />
+              </div>
+            ))}
+          </div>
+        </Match>
+      </Switch>
     </div>
   );
 };
