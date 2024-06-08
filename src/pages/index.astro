@@ -3,14 +3,11 @@ import Layout from "../layouts/Layout.astro";
 import Spines from "../components/spines";
 import BottomBar from "../components/BottomBar";
 import Carousel from "../components/Carousel";
-import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
-const queryClient = new QueryClient();
+import { TanstackWrapper } from "../components/TanstackWrapper";
 ---
 
 <Layout title="Lyre Music Player">
-  <QueryClientProvider client={queryClient} client:load>
-    <Spines client:load />
-  </QueryClientProvider>
+  <TanstackWrapper client:load />
 
   <!-- <Carousel client:load /> -->
   <BottomBar
