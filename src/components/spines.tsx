@@ -34,11 +34,25 @@ const fetchAlbums = async (albumIds: string[]) => {
       },
     });
     const data = await response.json();
-    return data;
+    const album: Album = {
+      id: data.id,
+      name: data.name,
+      artists: data.artists.map((artist: any) => ({ name: artist.name })),
+      images: data.images.map((image: any) => ({ url: image.url })),
+      songs: data.tracks.items.map((track: any) => ({
+        id: track.id,
+        title: track.name,
+        artist: track.artists[0].name,
+        duration: track.duration_ms,
+        album: data.name,
+        listens: track.popularity,
+      })),
+    };
+    return album;
   });
 
   const albumsData = await Promise.all(albumPromises);
-  return albumsData as Album[];
+  return albumsData;
 };
 
 const useAlbums = (albumIds: string[]) => {
@@ -103,7 +117,7 @@ const Spines: Component = () => {
         </Match>
         <Match when={query.isError}>
           <div class="flex items-center justify-center h-full">
-            <div class="text-2xl text-red-500">Error fetching albums: {query!.error!.message}</div>
+            <div class="text-2xl text-red-500">Error fetching albums: {query?.error?.message}</div>
           </div>
         </Match>
         <Match when={query.isSuccess}>
@@ -116,7 +130,7 @@ const Spines: Component = () => {
               transition: 'transform 0.5s ease-out',
             }}
           >
-            {query!.data!.map((album, index) => (
+            {query?.data?.map((album, index) => (
               <div
                 class="flex-none h-full w-spineWidth"
                 style={{
