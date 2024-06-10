@@ -1,3 +1,6 @@
+import { createQuery } from "@tanstack/solid-query";
+import type { Album } from "./spines";
+
 const CLIENT_ID = "9a3ddce35111474088a10b319a4969d6";
 const CLIENT_SECRET = "5b8ac919fc1c45cb94388a3771ee1feb";
 const REDIRECT_URI = "http://localhost:4321";
@@ -21,6 +24,49 @@ export interface Song {
   album: string;
   listens: number;
 }
+
+
+const fetchAlbums = async (albumIds: string[]) => {
+  const accessToken = await getAccessToken();
+  const apiUrl = "https://api.spotify.com/v1/albums";
+
+  const albumPromises = albumIds.map(async (albumId) => {
+    const response = await fetch(`${apiUrl}/${albumId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    const data = await response.json();
+    const album: Album = {
+      id: data.id,
+      name: data.name,
+      artists: data.artists.map((artist: any) => ({ name: artist.name })),
+      images: data.images.map((image: any) => ({ url: image.url })),
+      songs: data.tracks.items.map((track: any) => ({
+        id: track.id,
+        title: track.name,
+        artist: track.artists[0].name,
+        duration: track.duration_ms,
+        album: data.name,
+        listens: track.popularity,
+      })),
+    };
+    return album;
+  });
+
+  const albumsData = await Promise.all(albumPromises);
+  return albumsData;
+};
+
+export const createAlbums = (albumIds: string[]) => {
+  return createQuery(() => ({
+    queryKey: ["albums", albumIds],
+    queryFn: () => fetchAlbums(albumIds)
+  }));
+};
+
+
+
 
 export const getAccessToken = async () => {
   try {

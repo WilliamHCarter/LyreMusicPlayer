@@ -1,8 +1,8 @@
 import type { Component } from "solid-js";
-import { createEffect, createSignal, For, Match, onMount, Switch } from "solid-js";
+import { createEffect, createSignal, Match, onMount, Switch } from "solid-js";
 import Spine from "./spine";
 import { getAccessToken, type Song } from "./API";
-import { createQuery } from "@tanstack/solid-query";
+import { createAlbums } from "./API";
 
 const defaultAlbums = [
   "19bQiwEKhXUBJWY6oV3KZk",
@@ -23,46 +23,7 @@ const defaultAlbums = [
   "4m2880jivSbbyEGAKfITCa",
 ];
 
-const fetchAlbums = async (albumIds: string[]) => {
-  const accessToken = await getAccessToken();
-  const apiUrl = "https://api.spotify.com/v1/albums";
-
-  const albumPromises = albumIds.map(async (albumId) => {
-    const response = await fetch(`${apiUrl}/${albumId}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-    const data = await response.json();
-    const album: Album = {
-      id: data.id,
-      name: data.name,
-      artists: data.artists.map((artist: any) => ({ name: artist.name })),
-      images: data.images.map((image: any) => ({ url: image.url })),
-      songs: data.tracks.items.map((track: any) => ({
-        id: track.id,
-        title: track.name,
-        artist: track.artists[0].name,
-        duration: track.duration_ms,
-        album: data.name,
-        listens: track.popularity,
-      })),
-    };
-    return album;
-  });
-
-  const albumsData = await Promise.all(albumPromises);
-  return albumsData;
-};
-
-const useAlbums = (albumIds: string[]) => {
-  return createQuery(() => ({
-    queryKey: ["albums", albumIds],
-    queryFn: () => fetchAlbums(albumIds)
-  }));
-};
-
-interface Album {
+export interface Album {
   id: string;
   name: string;
   artists: { name: string }[];
@@ -76,17 +37,17 @@ const Spines: Component = () => {
   const [spineOpen, setSpineOpen] = createSignal<boolean[]>([]);
   const [spineWidth, setSpineWidth] = createSignal(0);
 
-  const query = useAlbums(defaultAlbums);
+  const albums = createAlbums(defaultAlbums);
 
   onMount(() => {
     setMounted(true);
   });
 
   createEffect(() => {
-    if (mounted() && query.isSuccess) {
+    if (mounted() && albums.isSuccess) {
       setTimeout(() => {
-        setSpineOpen(new Array(query.data.length).fill(false));
-        setSpineWidth(100 / query.data.length);
+        setSpineOpen(new Array(albums.data.length).fill(false));
+        setSpineWidth(100 / albums.data.length);
       }, 300);
     }
   });
@@ -107,20 +68,20 @@ const Spines: Component = () => {
   return (
     <div
       class="relative w-screen h-screen overflow-x-scroll overflow-y-hidden"
-      style={`--rectangle-width: ${100 / Math.min(query.data?.length || 0, 16)}vw`}
+      style={`--rectangle-width: ${100 / Math.min(albums.data?.length || 0, 16)}vw`}
     >
       <Switch>
-        <Match when={query.isLoading}>
+        <Match when={albums.isLoading}>
           <div class="flex items-center justify-center h-full">
             <div class="text-2xl">Loading...</div>
           </div>
         </Match>
-        <Match when={query.isError}>
+        <Match when={albums.isError}>
           <div class="flex items-center justify-center h-full">
-            <div class="text-2xl text-red-500">Error fetching albums: {query?.error?.message}</div>
+            <div class="text-2xl text-red-500">Error fetching albums: {albums?.error?.message}</div>
           </div>
         </Match>
-        <Match when={query.isSuccess}>
+        <Match when={albums.isSuccess}>
           <div
             class="flex h-full spine-container"
             style={{
@@ -130,7 +91,7 @@ const Spines: Component = () => {
               transition: 'transform 0.5s ease-out',
             }}
           >
-            {query?.data?.map((album, index) => (
+            {albums?.data?.map((album, index) => (
               <div
                 class="flex-none h-full w-spineWidth"
                 style={{
