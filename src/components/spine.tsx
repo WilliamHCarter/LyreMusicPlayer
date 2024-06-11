@@ -39,7 +39,7 @@ const Spine: Component<SpineProps> = (props) => {
     {props.open && (
       <button
         class="absolute top-4 right-4 text-white hover:text-gray-200"
-        onClick={() => props.closeSpine()}
+        onMouseDown={() => props.closeSpine()}
       >
         <X size={24} />
       </button>

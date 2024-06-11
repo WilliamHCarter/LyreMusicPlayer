@@ -12,31 +12,43 @@ export const MusicPlayer = () => {
   const [currentTrack, setCurrentTrack] = createSignal<Track | null>(null);
   const [isConnected, setIsConnected] = createSignal(false);
 
-  let player: Spotify.Player;
+  let player: Spotify.Player | undefined;
+
+  const initializePlayer = () => {
+    if (window.Spotify) {
+      player = new window.Spotify.Player({
+        name: "Lyre Music Player",
+        getOAuthToken: (callback: (token: string) => void) => {
+          const token = localStorage.getItem("spotifyAccessToken");
+          if (token) {
+            callback(token);
+          } else {
+            console.error("Access token not found");
+          }
+        },
+      });
+
+      // Connect to the player
+      player.connect().then(() => {
+        console.log("Connected to Spotify player");
+      }).catch((error) => {
+        console.error("Error connecting to Spotify player:", error);
+      });
+    }
+  };
 
   onMount(() => {
     const script = document.createElement("script");
     script.src = "https://sdk.scdn.co/spotify-player.js";
     script.async = true;
-    document.body.appendChild(script);
 
-    if (isConnected() || localStorage.getItem("spotifyAccessToken")) {
-      console.log("Spotify connecting...");
+    script.addEventListener("load", () => {
       window.onSpotifyWebPlaybackSDKReady = () => {
-        if (window.Spotify) {
-          player = new window.Spotify.Player({
-            name: "Lyre Music Player",
-            getOAuthToken: (callback: (token: string) => void) => {
-              const token = localStorage.getItem("spotifyAccessToken") as string;
-              callback(token);
-            },
-          });
-
-          // Connect to the player
-          player.connect();
-        }
+        initializePlayer();
       };
-    }
+    });
+
+    document.body.appendChild(script);
   });
 
   createEffect(async () => {
@@ -49,12 +61,21 @@ export const MusicPlayer = () => {
   });
 
   const togglePlayPause = () => {
-    if (isPlaying()) {
-      player.pause();
-      setIsPlaying(false);
-    } else {
-      player.resume();
-      setIsPlaying(true);
+    if (player) {
+      player.getCurrentState().then((state) => {
+        if (!state) {
+          console.error("User is not playing music through the Web Playback SDK");
+          return;
+        }
+
+        if (state.paused) {
+          player?.resume();
+          setIsPlaying(true);
+        } else {
+          player?.pause();
+          setIsPlaying(false);
+        }
+      });
     }
   };
 

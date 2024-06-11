@@ -61,11 +61,10 @@ const fetchAlbums = async (albumIds: string[]) => {
 export const createAlbums = (albumIds: string[]) => {
   return createQuery(() => ({
     queryKey: ["albums", albumIds],
-    queryFn: () => fetchAlbums(albumIds)
+    queryFn: () => fetchAlbums(albumIds),
+    refetchOnWindowFocus: false,
   }));
 };
-
-
 
 
 export const getAccessToken = async () => {

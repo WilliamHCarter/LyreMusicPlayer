@@ -100,7 +100,7 @@ const Spines: Component = () => {
                   'flex-shrink': 0,
                   width: expandedIndex() === index ? '60%' : 'var(--rectangle-width)',
                 }}
-                onClick={() => handleClick(index)}
+                onMouseDown={() => handleClick(index)}
               >
                 <Spine
                   open={spineOpen()[index]}

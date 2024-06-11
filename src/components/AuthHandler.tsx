@@ -7,11 +7,13 @@ export const [token, setToken] = createSignal("");
 import { createMutation } from '@tanstack/solid-query';
 
 const AuthHandler = () => {
-  const [isAuthorizing, setIsAuthorizing] = createSignal(false);
-
-  const exchangeCodeForTokenMutation = createMutation(exchangeCodeForToken);
+  const exchangeCodeForTokenMutation = createMutation(() => ({
+    mutationFn: (code:string) => exchangeCodeForToken(code),
+    refetchOnWindowFocus: false,
+  }));
 
   onMount(() => {
+    console.log('loading auth handler ')
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
     const state = urlParams.get("state");
@@ -35,7 +37,7 @@ const AuthHandler = () => {
     <>
       <div
         class={`absolute flex z-99 top-0 justify-center items-center w-full h-full bg-black bg-opacity-50`}
-        style={{ visibility: exchangeCodeForTokenMutation.isLoading ? "visible" : "hidden" }}
+        style={{ visibility: exchangeCodeForTokenMutation.isPending ? "visible" : "hidden" }}
       >
         <div class="flex flex-col items-center gap-2 bg-slate-700 p-6 rounded-lg">
           <p class="text-white text-xl">Authorizing...</p>
