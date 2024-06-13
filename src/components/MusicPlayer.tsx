@@ -1,7 +1,43 @@
-import { createSignal, createEffect, Show } from "solid-js";
+import { createSignal, createEffect, Show, onMount } from "solid-js";
 import { Play, Pause, SkipForward, SkipBack } from "lucide-solid";
 import { getTrack, type Track } from "./API";
-import { onMount } from "solid-js";
+
+const loadSpotifyScript = () => {
+  return new Promise<void>((resolve) => {
+    const script = document.createElement("script");
+    script.src = "https://sdk.scdn.co/spotify-player.js";
+    script.async = true;
+
+    script.addEventListener("load", () => {
+      resolve();
+    });
+
+    document.body.appendChild(script);
+  });
+};
+
+let player: Spotify.Player | undefined;
+
+window.onSpotifyWebPlaybackSDKReady = () => {
+  player = new window.Spotify!.Player({
+    name: "Lyre Music Player",
+    getOAuthToken: (callback: (token: string) => void) => {
+      const token = localStorage.getItem("spotifyAccessToken");
+      if (token) {
+        callback(token);
+      } else {
+        console.error("Access token not found");
+      }
+    },
+  });
+
+  // Connect to the player
+  player.connect().then(() => {
+    console.log("Connected to Spotify player");
+  }).catch((error) => {
+    console.error("Error connecting to Spotify player:", error);
+  });
+};
 
 export const MusicPlayer = () => {
   const [isPlaying, setIsPlaying] = createSignal(false);
@@ -10,45 +46,14 @@ export const MusicPlayer = () => {
     "1nmxPH5RODwmPwfLOnyaAt"
   );
   const [currentTrack, setCurrentTrack] = createSignal<Track | null>(null);
-  const [isConnected, setIsConnected] = createSignal(false);
 
-  let player: Spotify.Player | undefined;
-
-  const initializePlayer = () => {
-    if (window.Spotify) {
-      player = new window.Spotify.Player({
-        name: "Lyre Music Player",
-        getOAuthToken: (callback: (token: string) => void) => {
-          const token = localStorage.getItem("spotifyAccessToken");
-          if (token) {
-            callback(token);
-          } else {
-            console.error("Access token not found");
-          }
-        },
-      });
-
-      // Connect to the player
-      player.connect().then(() => {
-        console.log("Connected to Spotify player");
-      }).catch((error) => {
-        console.error("Error connecting to Spotify player:", error);
-      });
+  onMount(async () => {
+    try {
+      await loadSpotifyScript();
+      console.log("Spotify Web Playback SDK loaded");
+    } catch (error) {
+      console.error("Error loading Spotify script:", error);
     }
-  };
-
-  onMount(() => {
-    const script = document.createElement("script");
-    script.src = "https://sdk.scdn.co/spotify-player.js";
-    script.async = true;
-
-    script.addEventListener("load", () => {
-      window.onSpotifyWebPlaybackSDKReady = () => {
-        initializePlayer();
-      };
-    });
-
-    document.body.appendChild(script);
   });
 
   createEffect(async () => {
@@ -79,8 +84,17 @@ export const MusicPlayer = () => {
     }
   };
 
-  const skipNext = () => player?.nextTrack();
-  const skipPrevious = () => player?.previousTrack();
+  const skipNext = () => {
+    if (player) {
+      player.nextTrack();
+    }
+  };
+
+  const skipPrevious = () => {
+    if (player) {
+      player.previousTrack();
+    }
+  };
 
   return (
     <div class="relative w-[25vw] h-full bg-black flex items-center space-between">
@@ -124,13 +138,13 @@ export const MusicPlayer = () => {
           class="text-white cursor-pointer"
           fill="white"
           size={18}
-          onClick={() => skipNext()}
+          onClick={skipPrevious}
         />
         <SkipForward
           class="text-white cursor-pointer"
           fill="white"
           size={18}
-          onClick={() => skipPrevious()}
+          onClick={skipNext}
         />
       </div>
     </div>

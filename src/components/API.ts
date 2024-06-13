@@ -210,11 +210,9 @@ export const getTrack = async (trackId: string): Promise<Track> => {
 
 
 //==================== Login and Auth  =====================
-
-const scopes = ['user-read-private', 'user-read-email'];
-
 export const login = () => {
   const state = generateRandomString(16);
+  const scopes = ['user-read-private', 'user-read-email', 'streaming', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played'];
   const authUrl = 'https://accounts.spotify.com/authorize?' +
     new URLSearchParams({
       response_type: 'code',
