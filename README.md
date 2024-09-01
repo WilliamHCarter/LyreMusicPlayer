@@ -7,8 +7,7 @@
 <img alt="Tailwind" src="https://img.shields.io/badge/-TailwindCSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" height="25"/></p>
 
 
-
-![just-the-basics](https://github.com/withastro/astro/assets/2244813/a0a5533c-a856-4198-8470-2d67b1d7c554)
+![lyre-demo](https://github.com/WilliamHCarter/LyreMusicPlayer/blob/main/public/LyreDemo.mp4)
 
 ## Overview
 
