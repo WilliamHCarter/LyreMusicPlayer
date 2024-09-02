@@ -6,8 +6,8 @@
 <img alt="Astro" src="https://img.shields.io/badge/-Astro-FF5D01?style=flat-square&logo=astro&logoColor=white" height="25"/>
 <img alt="Tailwind" src="https://img.shields.io/badge/-TailwindCSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" height="25"/></p>
 
+https://github.com/user-attachments/assets/a6e709bf-909f-4acf-9c2a-9a3d2cd1fca9
 
-![lyre-demo](https://github.com/WilliamHCarter/LyreMusicPlayer/blob/main/public/LyreDemo.mp4)
 
 ## Overview
 
