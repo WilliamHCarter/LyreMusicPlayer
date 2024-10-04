@@ -1,10 +1,4 @@
-import {
-  createEffect,
-  createSignal,
-  For,
-  onMount,
-  type Signal,
-} from "solid-js";
+import { createEffect, createSignal, For, onMount, type Signal } from "solid-js";
 import type { Song } from "./API";
 import { desaturateRGBAdjusted, getAccentColor } from "./Helpers";
 import { getDelayClass } from "./Animations";
@@ -49,9 +43,9 @@ const CItem = (props: CItemProps) => {
 
   const handleClick = () => {
     setExpanded(!expanded());
-    console.log("clicked", props.index);
+    console.log('clicked', props.index)
     props.setSpineOpen(props.index);
-    console.log("spineOpen", props.spineOpen);
+    console.log("spineOpen", props.spineOpen)
   };
 
   //Get accent color for spine
@@ -65,7 +59,7 @@ const CItem = (props: CItemProps) => {
     if (props.spineOpen.some((isOpen) => isOpen)) {
       setExpanded(false);
     }
-    console.log("update");
+    console.log("update")
   }, props.spineOpen);
 
   const handleFullImageLoad = () => {
@@ -76,7 +70,7 @@ const CItem = (props: CItemProps) => {
     <div
       class={`inline-block h-full animate-slide-up`}
       style={{
-        width: expanded() ? "65vh" : `6.25vw`,
+        width: expanded() ? "32vh" : `6.25vw`,
         "background-color": accentColor(),
         "animation-delay": `${getDelayClass(props.index)}ms`,
         transition: "width 0.4s ease-in-out 0.2s, margin-top 0.01s ease-in-out",
@@ -84,35 +78,12 @@ const CItem = (props: CItemProps) => {
       onClick={handleClick}
     >
       <CCover albumCover={props.albumCover} miniAlbumCover={props.miniCover} />
-      <div
-        class="mt-4 self-start ml-[1.3vw] whitespace-nowrap [writing-mode:vertical-rl] pointer-events-none"
-        style={{
-          transition: `opacity 0.2s ease-in-out ${
-            !expanded() ? "0.5s" : "0.1s"
-          }`,
-          opacity: expanded() ? 0 : 1,
-        }}
-      >
-        <div class="text-white text-3xl font-semibold">{props.albumName}</div>
-        <div class="text-white opacity-50">{props.artistName}</div>
-      </div>
-
-      <div
-        class="w-full px-8 absolute top-0"
-        style={{
-          transition: `opacity ${expanded() ? "0.4s" : "0.2s"} ease-in ${
-            expanded() ? "0.2s" : "0.0s"
-          }, transform 0.85s ease-in-out`,
-          transform: expanded() ? "translateY(40vh)" : "translateY(70vh)",
-          opacity: expanded() ? 1 : 0,
-        }}
-      >
-        <div class="mt-4 relative whitespace-nowrap">
+      <div class="mt-4 self-start ml-[1.3vw] whitespace-nowrap [writing-mode:vertical-rl] pointer-events-none" style={{ transition: `opacity ${!expanded() ? "0.4s" : "0.2s"} ease-in`}}>
           <div class="text-white text-3xl font-semibold">{props.albumName}</div>
           <div class="text-white opacity-50">{props.artistName}</div>
-        </div>
-        <SongList songList={props.songList} />
       </div>
+
+
     </div>
   );
 };
@@ -152,8 +123,8 @@ const Carousel = () => {
 
   return (
     <div class="carousel overflow-x-scroll whitespace-nowrap h-screen">
-      <For each={albums()}>
-        {(album, index) => (
+        <For each={albums()}>
+          {(album, index) => (
           <CItem
             width={spineWidth()}
             songList={album.songs}
