@@ -1,5 +1,12 @@
 import type { Component } from "solid-js";
-import { createEffect, createSignal, Match, onMount, Switch } from "solid-js";
+import {
+  createEffect,
+  createSignal,
+  Match,
+  onMount,
+  Switch,
+  For,
+} from "solid-js";
 import Spine from "./spine";
 import { getAccessToken, type Song } from "./API";
 import { createAlbums } from "./API";
@@ -32,38 +39,65 @@ export interface Album {
 }
 
 const Spines: Component = () => {
-  const [mounted, setMounted] = createSignal(false);
+  // Animation state management
+  const [animationReady, setAnimationReady] = createSignal(false);
+  const [animatedItems, setAnimatedItems] = createSignal<number[]>([]);
+
+  // UI state management
   const [expandedIndex, setExpandedIndex] = createSignal<number | null>(null);
   const [spineOpen, setSpineOpen] = createSignal<boolean[]>([]);
   const [spineWidth, setSpineWidth] = createSignal(0);
 
+  // Data management
   const albums = createAlbums(defaultAlbums);
 
-  onMount(() => {
-    setMounted(true);
-  });
-
+  // Initialize the animation sequence when data is ready
   createEffect(() => {
-    if (mounted() && albums.isSuccess) {
-      setTimeout(() => {
-        setSpineOpen(new Array(albums.data.length).fill(false));
-        setSpineWidth(100 / albums.data.length);
-      }, 300);
+    if (albums.isSuccess && albums.data) {
+      // Initialize state
+      setSpineOpen(new Array(albums.data.length).fill(false));
+      setSpineWidth(100 / albums.data.length);
+
+      // Start animation sequence
+      requestAnimationFrame(() => {
+        setAnimationReady(true);
+        animateSpines();
+      });
     }
   });
+
+  // Animate spines sequentially
+  const animateSpines = () => {
+    const totalSpines = albums.data?.length || 0;
+    let currentIndex = 0;
+
+    const animate = () => {
+      if (currentIndex < totalSpines) {
+        setAnimatedItems((prev) => [...prev, currentIndex]);
+        currentIndex++;
+        setTimeout(animate, 60); // Consistent delay between animations
+      }
+    };
+
+    animate();
+  };
+
   const handleClick = (index: number) => {
-    let isSameIndex: boolean = expandedIndex() === index;
+    const isSameIndex = expandedIndex() === index;
     if (!isSameIndex && spineOpen()[index] === false) {
       toggleSpine(index);
     }
   };
 
   const toggleSpine = (index: number) => {
-    setExpandedIndex((prevIndex) => (prevIndex === index ? null : index));
+    setExpandedIndex((prev) => (prev === index ? null : index));
     setSpineOpen((prev) =>
-      prev.map((_, i) => (i === index ? !prev[i] : false))
+      prev.map((_, i) => (i === index ? !prev[i] : false)),
     );
   };
+
+  const isSpineVisible = (index: number) =>
+    animationReady() && animatedItems().includes(index);
 
   return (
     <div
@@ -78,7 +112,9 @@ const Spines: Component = () => {
         </Match>
         <Match when={albums.isError}>
           <div class="flex items-center justify-center h-full">
-            <div class="text-2xl text-red-500">Error fetching albums: {albums?.error?.message}</div>
+            <div class="text-2xl text-red-500">
+              Error fetching albums: {albums?.error?.message}
+            </div>
           </div>
         </Match>
         <Match when={albums.isSuccess}>
@@ -87,38 +123,47 @@ const Spines: Component = () => {
             style={{
               transform: expandedIndex()
                 ? `translateX(calc(-1.6*var(--rectangle-width)*(0.36*${expandedIndex()})))`
-                : 'translateX(0)',
-              transition: 'transform 0.5s ease-out',
+                : "translateX(0)",
+              transition: "transform 0.5s ease-out",
             }}
           >
-            {albums?.data?.map((album, index) => (
-              <div
-                class="flex-none h-full w-spineWidth"
-                style={{
-                  transform: mounted() ? 'translateY(0)' : 'translateY(100%)',
-                  transition: `transform 0.85s ease-in-out ${index * 60}ms, width 0.5s ease-out`,
-                  'flex-shrink': 0,
-                  width: expandedIndex() === index ? '60%' : 'var(--rectangle-width)',
-                }}
-                onMouseDown={() => handleClick(index)}
-              >
-                <Spine
-                  open={spineOpen()[index]}
-                  width={spineWidth()}
-                  songList={album.songs}
-                  albumCover={album.images[0].url}
-                  albumName={album.name}
-                  artistName={album.artists[0].name}
-                  miniCover={album.images[2].url}
-                  closeSpine={() => toggleSpine(index)}
-                  index={index}
-                />
-              </div>
-            ))}
+            <For each={albums.data}>
+              {(album, index) => (
+                <div
+                  class="flex-none h-full w-spineWidth"
+                  style={{
+                    transform: isSpineVisible(index())
+                      ? "translateY(0)"
+                      : "translateY(100%)",
+                    transition: "transform 0.85s ease-in-out",
+                    "flex-shrink": 0,
+                    width:
+                      expandedIndex() === index()
+                        ? "60%"
+                        : "var(--rectangle-width)",
+                    opacity: isSpineVisible(index()) ? 1 : 0,
+                  }}
+                  onMouseDown={() => handleClick(index())}
+                >
+                  <Spine
+                    open={spineOpen()[index()]}
+                    width={spineWidth()}
+                    songList={album.songs}
+                    albumCover={album.images[0].url}
+                    albumName={album.name}
+                    artistName={album.artists[0].name}
+                    miniCover={album.images[2].url}
+                    closeSpine={() => toggleSpine(index())}
+                    index={index()}
+                  />
+                </div>
+              )}
+            </For>
           </div>
         </Match>
       </Switch>
     </div>
   );
 };
+
 export default Spines;
