@@ -34,12 +34,15 @@ const MobileSpine: Component<MobileSpineProps> = (props) => {
   return (
     <div
       style={`background-color: ${accentColor()};`}
-      class={`flex flex-row items-center w-full h-full relative hover:grow-[2]`}
+      class={`flex flex-row items-start w-full h-full relative grow hover:grow-[2]`}
     >
       {props.open && (
         <button
           class="absolute top-4 right-4 text-white hover:text-gray-200"
-          onMouseDown={() => props.closeSpine()}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            props.closeSpine();
+          }}
         >
           <X size={24} />
         </button>
@@ -52,7 +55,7 @@ const MobileSpine: Component<MobileSpineProps> = (props) => {
           "background-size": "cover",
           height: props.open ? "50vw" : "6.25vh",
           "margin-left": props.open ? "25%" : "0%",
-          "margin-top": props.open ? "5%" : "0%",
+          "margin-top": props.open ? "7%" : "0%",
           transition:
             "height 0.4s ease-in-out 0.2s, margin-left 0.4s ease-in-out",
         }}
@@ -90,15 +93,17 @@ const MobileSpine: Component<MobileSpineProps> = (props) => {
             transition: `opacity ${props.open ? "0.4s" : "0.2s"} ease-in ${
               props.open ? "0.2s" : "0.0s"
             }, transform 0.85s ease-in-out`,
-            transform: props.open ? "translateY(40vh)" : "translateY(70vh)",
+            transform: props.open ? "translateY(26vh)" : "translateY(70vh)",
             opacity: props.open ? 1 : 0,
           }}
         >
           <div class="mt-4 relative whitespace-nowrap">
-            <div class="text-white text-3xl font-semibold">
+            <div class="text-white text-2xl md:text-3xl font-semibold">
               {props.albumName}
             </div>
-            <div class="text-white opacity-50">{props.artistName}</div>
+            <div class="text-sm md:text text-white opacity-50">
+              {props.artistName}
+            </div>
           </div>
           <SongList songList={props.songList} />
         </div>

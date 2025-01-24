@@ -7,14 +7,18 @@ export const SongRow = (props: { song: Song }) => {
     <>
       <div class="flex items-center justify-between p-2 hover:bg-opacity-10 hover:bg-white transition duration-200">
         <div>
-          <h3 class="text-lg font-semibold text-white">{song.title}</h3>
-          <p class="text-sm text-white opacity-50">{song.artist}</p>
+          <h3 class="text-sm md:text-lg font-semibold text-white pointer-events-none">
+            {song.title}
+          </h3>
+          <p class="text-xs md:text-sm text-white opacity-50 pointer-events-none">
+            {song.artist}
+          </p>
         </div>
         <div class="flex gap-4">
-          <p class="text-sm text-white opacity-50">
+          <p class="text-xs md:text-sm text-white opacity-50 pointer-events-none">
             {formatDuration(song.duration)}
           </p>
-          <p class="text-sm text-white opacity-50">
+          <p class="text-xs md:text-sm text-white opacity-50 pointer-events-none">
             {formatListens(song.listens) ?? 0} listens
           </p>
         </div>
