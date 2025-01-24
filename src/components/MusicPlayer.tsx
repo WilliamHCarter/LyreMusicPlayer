@@ -32,18 +32,21 @@ window.onSpotifyWebPlaybackSDKReady = () => {
   });
 
   // Connect to the player
-  player.connect().then(() => {
-    console.log("Connected to Spotify player");
-  }).catch((error) => {
-    console.error("Error connecting to Spotify player:", error);
-  });
+  player
+    .connect()
+    .then(() => {
+      console.log("Connected to Spotify player");
+    })
+    .catch((error) => {
+      console.error("Error connecting to Spotify player:", error);
+    });
 };
 
 export const MusicPlayer = () => {
   const [isPlaying, setIsPlaying] = createSignal(false);
   const [isHovered, setIsHovered] = createSignal(false);
   const [currentTrackId, setCurrentTrackId] = createSignal(
-    "1nmxPH5RODwmPwfLOnyaAt"
+    "1nmxPH5RODwmPwfLOnyaAt",
   );
   const [currentTrack, setCurrentTrack] = createSignal<Track | null>(null);
 
@@ -69,7 +72,9 @@ export const MusicPlayer = () => {
     if (player) {
       player.getCurrentState().then((state) => {
         if (!state) {
-          console.error("User is not playing music through the Web Playback SDK");
+          console.error(
+            "User is not playing music through the Web Playback SDK",
+          );
           return;
         }
 
@@ -97,7 +102,7 @@ export const MusicPlayer = () => {
   };
 
   return (
-    <div class="relative w-[25vw] h-full bg-black flex items-center space-between">
+    <div class="relative w-[65vw] sm:w-[25vw] h-full bg-black flex items-center space-between">
       <div
         class="absolute inset-0 bg-cover bg-center blur-md opacity-50"
         style={{ "background-image": `url(${currentTrack()?.albumImage})` }}
@@ -124,7 +129,7 @@ export const MusicPlayer = () => {
             </div>
           </Show>
         </div>
-        <div class="text-white flex flex-col justify-center h-full pl-4 py-1 w-[10vw] bg-[#ffffff30]">
+        <div class="text-white flex flex-col justify-center h-full pl-4 py-1 w-[33vw] sm:w-[10vw] bg-[#ffffff30]">
           <div class="text-[10px] opacity-70 leading-tight">
             {currentTrack()?.artistName} - {currentTrack()?.albumName}
           </div>
