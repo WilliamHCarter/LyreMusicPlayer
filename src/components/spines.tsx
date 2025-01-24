@@ -8,6 +8,7 @@ import {
   For,
 } from "solid-js";
 import Spine from "./spine";
+import MobileSpine from "./spineMobile";
 import { getAccessToken, type Song } from "./API";
 import { createAlbums } from "./API";
 
@@ -47,9 +48,20 @@ const Spines: Component = () => {
   const [expandedIndex, setExpandedIndex] = createSignal<number | null>(null);
   const [spineOpen, setSpineOpen] = createSignal<boolean[]>([]);
   const [spineWidth, setSpineWidth] = createSignal(0);
+  const [isMobile, setIsMobile] = createSignal(false);
 
   // Data management
   const albums = createAlbums(defaultAlbums);
+  onMount(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768); // Standard mobile breakpoint
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  });
 
   // Initialize the animation sequence when data is ready
   createEffect(() => {
@@ -101,13 +113,21 @@ const Spines: Component = () => {
 
   return (
     <div
-      class="relative w-screen h-screen overflow-x-scroll overflow-y-hidden"
-      style={`--rectangle-width: ${100 / Math.min(albums.data?.length || 0, 16)}vw`}
+      class={`relative ${
+        isMobile()
+          ? "h-screen w-screen overflow-y-scroll overflow-x-hidden"
+          : "w-screen h-screen overflow-x-scroll overflow-y-hidden"
+      }`}
+      style={
+        isMobile()
+          ? `--rectangle-height: ${100 / Math.min(albums.data?.length || 0, 16)}vh`
+          : `--rectangle-width: ${100 / Math.min(albums.data?.length || 0, 16)}vw`
+      }
     >
       <Switch>
         <Match when={albums.isLoading}>
           <div class="flex items-center justify-center h-full">
-            <div class="text-2xl">Loading...</div>
+            <div class="text-2xl text-gray-300 font-semibold">Loading...</div>
           </div>
         </Match>
         <Match when={albums.isError}>
@@ -119,43 +139,63 @@ const Spines: Component = () => {
         </Match>
         <Match when={albums.isSuccess}>
           <div
-            class="flex h-full spine-container"
+            class={`${isMobile() ? "flex flex-col w-full" : "flex h-full"} spine-container`}
             style={{
               transform: expandedIndex()
-                ? `translateX(calc(-1.6*var(--rectangle-width)*(0.36*${expandedIndex()})))`
-                : "translateX(0)",
+                ? isMobile()
+                  ? `translateY(calc(-1.6*var(--rectangle-height)*(0.36*${expandedIndex()})))`
+                  : `translateX(calc(-1.6*var(--rectangle-width)*(0.36*${expandedIndex()})))`
+                : "translate(0)",
               transition: "transform 0.5s ease-out",
             }}
           >
             <For each={albums.data}>
               {(album, index) => (
                 <div
-                  class="flex-none h-full w-spineWidth"
+                  class={`${isMobile() ? "flex-none w-full" : "flex-none h-full"}`}
                   style={{
                     transform: isSpineVisible(index())
-                      ? "translateY(0)"
-                      : "translateY(100%)",
+                      ? "translate(0)"
+                      : isMobile()
+                        ? "translateX(100%)"
+                        : "translateY(100%)",
                     transition: "transform 0.85s ease-in-out",
                     "flex-shrink": 0,
-                    width:
+                    [isMobile() ? "height" : "width"]:
                       expandedIndex() === index()
                         ? "60%"
-                        : "var(--rectangle-width)",
+                        : isMobile()
+                          ? "var(--rectangle-height)"
+                          : "var(--rectangle-width)",
                     opacity: isSpineVisible(index()) ? 1 : 0,
                   }}
                   onMouseDown={() => handleClick(index())}
                 >
-                  <Spine
-                    open={spineOpen()[index()]}
-                    width={spineWidth()}
-                    songList={album.songs}
-                    albumCover={album.images[0].url}
-                    albumName={album.name}
-                    artistName={album.artists[0].name}
-                    miniCover={album.images[2].url}
-                    closeSpine={() => toggleSpine(index())}
-                    index={index()}
-                  />
+                  {isMobile() ? (
+                    <MobileSpine
+                      open={spineOpen()[index()]}
+                      height={spineWidth()}
+                      songList={album.songs}
+                      albumCover={album.images[0].url}
+                      albumName={album.name}
+                      artistName={album.artists[0].name}
+                      miniCover={album.images[2].url}
+                      closeSpine={() => toggleSpine(index())}
+                      index={index()}
+                    />
+                  ) : (
+                    <Spine
+                      open={spineOpen()[index()]}
+                      width={spineWidth()}
+                      songList={album.songs}
+                      albumCover={album.images[0].url}
+                      albumName={album.name}
+                      artistName={album.artists[0].name}
+                      miniCover={album.images[2].url}
+                      closeSpine={() => toggleSpine(index())}
+                      index={index()}
+                    />
+                  )}
                 </div>
               )}
             </For>
