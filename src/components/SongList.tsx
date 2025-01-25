@@ -1,5 +1,5 @@
 import { For } from "solid-js";
-import { type Song } from "./API.ts";
+import { type Song } from "./API";
 
 export const SongRow = (props: { song: Song }) => {
   const { song } = props;
@@ -34,7 +34,7 @@ interface SongListProps {
 
 export const SongList = ({ songList }: SongListProps) => {
   return (
-    <div class="max-h-[45vh] overflow-y-auto">
+    <div class="max-h-[45vh] overflow-y-auto scrollbar-styled">
       <For each={songList}>{(song) => <SongRow song={song} />}</For>
     </div>
   );

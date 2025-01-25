@@ -114,12 +114,12 @@ const Spines: Component = () => {
 
   return (
     <div
-      class="relative w-screen h-screen overflow-x-scroll overflow-y-hidden"
+      class="relative w-screen h-screen overflow-x-scroll overflow-y-hidden scrollbar-hide"
       style={`--rectangle-width: ${100 / Math.min(albums.data?.length || 0, 16)}vw`}
     >
       <Switch>
         <Match when={albums.isLoading}>
-          <div class="flex items-center justify-center h-full">
+          <div class="flex items-center justify-center h-full scrollbar-hide">
             <div class="text-2xl text-gray-300 font-semibold">Loading...</div>
           </div>
         </Match>

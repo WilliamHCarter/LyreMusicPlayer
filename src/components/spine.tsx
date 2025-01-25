@@ -34,12 +34,15 @@ const Spine: Component<SpineProps> = (props) => {
   return (
     <div
       style={`background-color: ${accentColor()};`}
-      class="flex flex-col items-center h-full w-full relative grow hover:grow-[2]"
+      class="flex flex-col items-center h-full w-full relative grow hover:grow-[2] "
     >
       {props.open && (
         <button
           class="absolute top-4 right-4 text-white hover:text-gray-200"
-          onMouseDown={() => props.closeSpine()}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            props.closeSpine();
+          }}
         >
           <X size={24} />
         </button>

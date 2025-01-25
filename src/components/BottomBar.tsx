@@ -28,7 +28,7 @@ const BottomBar: Component<BottomBarProps> = (props) => {
 
   return (
     <div
-      class="fixed bottom-0 left-0 right-0 z-10 h-12 bg-[#020202] flex items-center justify-between "
+      class="fixed bottom-0 left-0 right-0 z-10 h-12 bg-[#020202] flex items-center justify-between scrollbar-hide"
       style={{
         transform: transform(),
         transition: `transform 0.4s ease-in-out`,

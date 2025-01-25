@@ -1,7 +1,6 @@
 import { For } from "solid-js";
-import { type Song } from "./API.ts";
-import { SongRow } from "./SongList.tsx";
-
+import { type Song } from "./API";
+import { SongRow } from "./SongList";
 
 interface QueueProps {
   songList: Song[];
