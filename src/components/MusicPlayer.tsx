@@ -29,6 +29,7 @@ window.onSpotifyWebPlaybackSDKReady = () => {
         console.error("Access token not found");
       }
     },
+    volume: 0.5,
   });
 
   // Connect to the player
@@ -43,6 +44,7 @@ window.onSpotifyWebPlaybackSDKReady = () => {
 };
 
 export const MusicPlayer = () => {
+  const [playerError, setPlayerError] = createSignal<string | null>(null);
   const [isPlaying, setIsPlaying] = createSignal(false);
   const [isHovered, setIsHovered] = createSignal(false);
   const [currentTrackId, setCurrentTrackId] = createSignal(
@@ -53,9 +55,24 @@ export const MusicPlayer = () => {
   onMount(async () => {
     try {
       await loadSpotifyScript();
-      console.log("Spotify Web Playback SDK loaded");
+      if (!player) {
+        throw new Error("Failed to initialize Spotify player");
+      }
+
+      player.addListener("initialization_error", () => {
+        setPlayerError(`Failed to initialize:`);
+      });
+
+      player.addListener("authentication_error", () => {
+        setPlayerError(`Authentication failed`);
+      });
+
+      player.addListener("account_error", () => {
+        setPlayerError(`Account error`);
+      });
+      await player.connect();
     } catch (error) {
-      console.error("Error loading Spotify script:", error);
+      setPlayerError(`Player initialization failed: ${error}`);
     }
   });
 
