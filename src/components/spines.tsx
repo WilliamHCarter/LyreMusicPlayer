@@ -151,7 +151,7 @@ const Spines: Component = () => {
                     : isMobile()
                       ? "translateX(100%)"
                       : "translateY(100%)",
-                  transition: `transform 0.85s ease-in-out ${index * 60}ms, width 0.5s ease-out`,
+                  transition: `transform 0.85s ease-in-out ${index * 60}ms, ${isMobile() ? "height" : "width"} 0.5s ease-out`,
                   "flex-shrink": 0,
                   [isMobile() ? "height" : "width"]:
                     expandedIndex() === index
