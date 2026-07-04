@@ -1,23 +1,15 @@
-import { type Component, createSignal } from "solid-js";
-import {
-  CircleUserRound,
-  Search,
-  Music,
-  ListMusic,
-  ChevronDown,
-} from "lucide-solid";
+import { type Component, createSignal, onMount, For } from "solid-js";
+import { CircleUserRound, Search, ListMusic } from "lucide-solid";
 import { MusicPlayer } from "./MusicPlayer";
 import AuthHandler, { isAuthorizing, setIsAuthorizing } from "./AuthHandler";
 
-interface BottomBarProps {
-  albumCover: string;
-  miniCover: string;
-  albumName: string;
-  artistName: string;
-}
-
-const BottomBar: Component<BottomBarProps> = (props) => {
+const BottomBar: Component = () => {
   const [activeTab, setActiveTab] = createSignal("Home");
+  const [loggedIn, setLoggedIn] = createSignal(false);
+
+  onMount(() => {
+    setLoggedIn(!!localStorage.getItem("spotifyAccessToken"));
+  });
   const [transform, setTransform] = createSignal("translateY(100%)");
 
   const tabs = ["Home", "Library", "Albums", "Podcasts"];
@@ -36,46 +28,68 @@ const BottomBar: Component<BottomBarProps> = (props) => {
     >
       <div class="flex items-center justify-start h-full">
         {/* Account Section */}
-        <div
-          class="flex items-center px-2 gap-2"
+        <button
+          type="button"
+          aria-label={loggedIn() ? "Account" : "Log in with Spotify"}
+          class="flex items-center px-2 gap-2 cursor-pointer rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
           onClick={() => setIsAuthorizing(true)}
         >
-          <CircleUserRound class="text-white mr-2" />
-          <span class="hidden sm:inline text-white">Log In</span>
-          <ChevronDown class="hidden sm:inline text-white ml-8" />
-        </div>
+          <CircleUserRound class="text-white mr-2" aria-hidden="true" />
+          <span class="hidden sm:inline text-white">
+            {loggedIn() ? "Account" : "Log In"}
+          </span>
+        </button>
 
-        {/* Search Section */}
-        <div class="hidden sm:flex justify-between items-center h-full bg-[#222] px-4 maxW-[30vw] w-[25vw]">
+        {/* Search Section (not implemented yet — visibly disabled) */}
+        <div
+          class="hidden sm:flex justify-between items-center h-full bg-[#222] px-4 max-w-[30vw] w-[25vw] opacity-50"
+          title="Coming soon"
+        >
           <input
             type="text"
             placeholder="Search"
-            class="bg-[#222] text-white py-0 focus:outline-none"
+            disabled
+            aria-disabled="true"
+            title="Coming soon"
+            class="bg-[#222] text-white py-0 cursor-default focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
           />
-          <Search class=" text-white py-[0.1rem] " />
+          <Search class=" text-white py-[0.1rem] " aria-hidden="true" />
         </div>
-        <Search class="inline sm:hidden text-white py-[0.1rem] " />
+        <Search
+          class="inline sm:hidden text-white py-[0.1rem] opacity-50"
+          aria-hidden="true"
+        />
       </div>
 
-      {/* Tabs Section */}
-      <div class="hidden sm:flex justify-start p-auto flex-grow px-4">
+      {/* Tabs Section (only Home is functional for now) */}
+      <div class="hidden sm:flex justify-start flex-grow px-4">
         <div class="flex items-center justify-between w-full">
           <div>
-            {tabs.map((tab) => (
-              <button
-                class={`text-white px-4 py-1 ${
-                  activeTab() === tab ? "border-b-2 border-white" : ""
-                }`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab}
-              </button>
-            ))}
+            <For each={tabs}>
+              {(tab) => (
+                <button
+                  type="button"
+                  disabled={tab !== "Home"}
+                  aria-disabled={tab !== "Home"}
+                  title={tab !== "Home" ? "Coming soon" : undefined}
+                  aria-current={activeTab() === tab ? "true" : undefined}
+                  class={`text-white px-4 py-1 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${
+                    activeTab() === tab ? "border-b-2 border-white" : ""
+                  } ${tab !== "Home" ? "opacity-50 cursor-default" : "cursor-pointer"}`}
+                  onClick={() => setActiveTab(tab)}
+                >
+                  {tab}
+                </button>
+              )}
+            </For>
           </div>
-          <ListMusic class="text-white" />
+          <ListMusic class="text-white opacity-50" aria-hidden="true" />
         </div>
       </div>
-      <ListMusic class="inline sm:hidden text-white" />
+      <ListMusic
+        class="inline sm:hidden text-white opacity-50"
+        aria-hidden="true"
+      />
 
       {/* Player Section */}
       <MusicPlayer />

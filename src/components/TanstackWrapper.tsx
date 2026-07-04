@@ -9,12 +9,7 @@ export const TanstackWrapper: Component = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <Spines />
-      <BottomBar
-        albumCover={"albumCover"}
-        miniCover={"miniCover"}
-        albumName={"albumName"}
-        artistName={"artistName"}
-      />
+      <BottomBar />
     </QueryClientProvider>
   );
 };
