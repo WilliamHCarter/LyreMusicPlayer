@@ -91,6 +91,12 @@ const Spines: Component = () => {
     onCleanup(() => window.removeEventListener("keydown", onKeyDown));
   });
 
+  // The bottom bar waits on entranceDone; if the shelf can't load there is no
+  // entrance to wait for, so release it immediately.
+  createEffect(() => {
+    if (albums.isError) setEntranceDone(true);
+  });
+
   // Start the entrance once per dataset: `entered` only ever flips forward, so a
   // query refetch re-running this effect is a no-op and can't reset UI state.
   createEffect(() => {
