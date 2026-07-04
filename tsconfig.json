@@ -3,9 +3,9 @@
   "compilerOptions": {
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
-    "target": "es2017",
+    "target": "es2020",
     "module": "esnext",
-    "lib": ["dom", "es2017"],
+    "lib": ["dom", "es2020"],
     "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true,
