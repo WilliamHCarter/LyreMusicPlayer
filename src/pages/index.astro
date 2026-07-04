@@ -1,32 +1,8 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import Spines from "../components/spines";
-import BottomBar from "../components/BottomBar";
-import Carousel from "../components/Carousel";
 import { TanstackWrapper } from "../components/TanstackWrapper";
 ---
 
 <Layout title="Lyre Music Player">
   <TanstackWrapper client:only="solid-js" />
-
-  <!-- <Carousel client:load /> -->
-  <!-- <BottomBar
-    albumCover={"albumCover"}
-    miniCover={"miniCover"}
-    albumName={"albumName"}
-    artistName={"artistName"}
-    client:load
-  /> -->
 </Layout>
-
-<style>
-  main {
-    margin: auto;
-    padding: 1rem;
-    width: 800px;
-    max-width: calc(100% - 2rem);
-    color: white;
-    font-size: 20px;
-    line-height: 1.6;
-  }
-</style>

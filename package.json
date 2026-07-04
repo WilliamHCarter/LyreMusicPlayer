@@ -1,5 +1,5 @@
 {
-  "name": "",
+  "name": "lyre-music-player",
   "type": "module",
   "version": "0.0.1",
   "scripts": {
@@ -10,22 +10,17 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/check": "^0.9.4",
-    "@astrojs/tailwind": "^5.1.5",
     "@tanstack/solid-query": "^5.40.1",
     "astro": "^5.13.2",
-    "brace-expansion": "^2.0.2",
-    "devalue": "^5.3.2",
-    "esbuild": "^0.25.9",
     "lucide-solid": "^0.372.0",
-    "prismjs": "^1.30.0",
-    "solid-js": "^1.8.16",
-    "tailwind-scrollbar-hide": "^2.0.0",
-    "tailwindcss": "^3.4.3",
-    "typescript": "^5.4.5",
-    "vite": "^6.4.2"
+    "solid-js": "^1.8.16"
   },
   "devDependencies": {
-    "@astrojs/solid-js": "^5.0.4"
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/solid-js": "^5.0.4",
+    "@astrojs/tailwind": "^5.1.5",
+    "tailwind-scrollbar-hide": "^2.0.0",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.4.5"
   }
 }

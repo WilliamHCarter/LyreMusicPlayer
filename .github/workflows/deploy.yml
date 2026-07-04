@@ -1,7 +1,7 @@
 name: Deploy to GitHub Pages
 on:
   push:
-    branches: [master]
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
@@ -17,7 +17,7 @@ jobs:
         uses: withastro/action@v3.0.2
         with:
           package-manager: pnpm
-          node-version: 18
+          node-version: 22
   deploy:
     needs: build
     runs-on: ubuntu-latest
