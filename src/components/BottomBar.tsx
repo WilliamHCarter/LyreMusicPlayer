@@ -1,7 +1,14 @@
-import { type Component, createSignal, onMount, For } from "solid-js";
+import {
+  type Component,
+  createEffect,
+  createSignal,
+  onMount,
+  For,
+} from "solid-js";
 import { CircleUserRound, Search, ListMusic } from "lucide-solid";
 import { MusicPlayer } from "./MusicPlayer";
-import AuthHandler, { isAuthorizing, setIsAuthorizing } from "./AuthHandler";
+import AuthHandler, { setIsAuthorizing } from "./AuthHandler";
+import { entranceDone } from "./spines";
 
 const BottomBar: Component = () => {
   const [activeTab, setActiveTab] = createSignal("Home");
@@ -14,9 +21,11 @@ const BottomBar: Component = () => {
 
   const tabs = ["Home", "Library", "Albums", "Podcasts"];
 
-  setTimeout(() => {
-    setTransform("translateY(0)");
-  }, 1450);
+  // Slide up when the album-shelf entrance actually finishes (entranceDone is
+  // set by spines.tsx) instead of a hardcoded timeout racing the data fetch.
+  createEffect(() => {
+    if (entranceDone()) setTransform("translateY(0)");
+  });
 
   return (
     <div

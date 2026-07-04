@@ -3,14 +3,13 @@ import {
   createEffect,
   createSignal,
   Match,
+  onCleanup,
   onMount,
   Switch,
   For,
 } from "solid-js";
 import Spine from "./spine";
-import MobileSpine from "./spineMobile";
-import { getAccessToken, type Song } from "./API";
-import { createAlbums } from "./API";
+import { createAlbums, type Song } from "./API";
 
 const defaultAlbums = [
   "19bQiwEKhXUBJWY6oV3KZk",
@@ -39,83 +38,100 @@ export interface Album {
   songs: Song[];
 }
 
-const Spines: Component = () => {
-  // Animation state management
-  const [animationReady, setAnimationReady] = createSignal(false);
-  const [animatedItems, setAnimatedItems] = createSignal<number[]>([]);
+// Entrance timing. SLIDE_MS must match the transform transition duration below.
+const STAGGER_MS = 60;
+const SLIDE_MS = 850;
+// An open spine's share of the viewport axis (60% wide on desktop, 60vh on mobile).
+const EXPANDED_PCT = 60;
+// Spine thickness is sized so at most this many spines fill one viewport.
+const MAX_VISIBLE = 16;
 
-  // UI state management
+// Module-level signal (same pattern as AuthHandler's isAuthorizing) so BottomBar
+// can slide up exactly when the shelf entrance finishes instead of a hardcoded timeout.
+export const [entranceDone, setEntranceDone] = createSignal(false);
+
+const Spines: Component = () => {
+  // Entrance state: `entered` flips once when data arrives; CSS per-index
+  // transition-delay does all the staggering. `staggering` gates those delays
+  // so they are cleared after the entrance and can't lag later transforms.
+  const [entered, setEntered] = createSignal(false);
+  const [staggering, setStaggering] = createSignal(true);
+
+  // UI state: expandedIndex is the single source of truth for which spine is open.
   const [expandedIndex, setExpandedIndex] = createSignal<number | null>(null);
-  const [spineOpen, setSpineOpen] = createSignal<boolean[]>([]);
-  const [spineWidth, setSpineWidth] = createSignal(0);
-  const [isMobile, setIsMobile] = createSignal(false);
+  const [vertical, setVertical] = createSignal(false);
 
   // Data management
   const albums = createAlbums(defaultAlbums);
 
+  // Spine thickness in viewport units (vw on desktop, vh on mobile).
+  const unit = () =>
+    100 / Math.min(albums.data?.length || MAX_VISIBLE, MAX_VISIBLE);
+
+  // Shelf shift per index when a spine opens: each collapsed spine's on-screen
+  // share shrinks from unit() to (100 - EXPANDED_PCT)/(n - 1), so the shelf slides
+  // by that difference for every spine before the open one. Replaces the old
+  // magic calc(-1.6 * w * 0.36 * i), which was exact only for n = 16 at 60%.
+  const shiftPerIndex = () => {
+    const n = albums.data?.length ?? 0;
+    return n > 1 ? unit() - (100 - EXPANDED_PCT) / (n - 1) : 0;
+  };
+
   onMount(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 712);
+    const mq = window.matchMedia("(max-width: 712px)");
+    const updateOrientation = () => setVertical(mq.matches);
+    updateOrientation();
+    mq.addEventListener("change", updateOrientation);
+    onCleanup(() => mq.removeEventListener("change", updateOrientation));
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setExpandedIndex(null);
     };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-
-    return () => window.removeEventListener("resize", checkMobile);
+    window.addEventListener("keydown", onKeyDown);
+    onCleanup(() => window.removeEventListener("keydown", onKeyDown));
   });
 
-  // Initialize the animation sequence when data is ready
+  // Start the entrance once per dataset: `entered` only ever flips forward, so a
+  // query refetch re-running this effect is a no-op and can't reset UI state.
   createEffect(() => {
-    if (albums.isSuccess && albums.data) {
-      // Initialize state
-      setSpineOpen(new Array(albums.data.length).fill(false));
-      setSpineWidth(100 / albums.data.length);
+    if (!albums.isSuccess || !albums.data || entered()) return;
 
-      // Start animation sequence
-      requestAnimationFrame(() => {
-        setAnimationReady(true);
-        animateSpines();
-      });
-    }
-  });
-
-  // Animate spines sequentially
-  const animateSpines = () => {
-    const totalSpines = albums.data?.length || 0;
-    let currentIndex = 0;
-
-    const animate = () => {
-      if (currentIndex < totalSpines) {
-        setAnimatedItems((prev) => [...prev, currentIndex]);
-        currentIndex++;
-        setTimeout(animate, 60); // Consistent delay between animations
-      }
+    const n = albums.data.length;
+    const finishEntrance = () => {
+      setStaggering(false);
+      setEntranceDone(true);
     };
 
-    animate();
-  };
-
-  const handleClick = (index: number) => {
-    const isSameIndex = expandedIndex() === index;
-    if (!isSameIndex && spineOpen()[index] === false) {
-      toggleSpine(index);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      // Reveal everything immediately; the global CSS kill-switch removes the
+      // remaining transition so nothing animates.
+      setStaggering(false);
+      setEntered(true);
+      setEntranceDone(true);
+      return;
     }
-  };
 
-  const toggleSpine = (index: number) => {
-    setExpandedIndex((prev) => (prev === index ? null : index));
-    setSpineOpen((prev) =>
-      prev.map((_, i) => (i === index ? !prev[i] : false)),
+    // Double rAF is load-bearing: a single rAF can fire before the browser commits
+    // the fresh nodes' initial offscreen styles, which would skip spine 0's slide-in.
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        setEntered(true);
+        // Entrance is done when the last spine's delayed slide completes.
+        setTimeout(finishEntrance, n * STAGGER_MS + SLIDE_MS);
+      }),
     );
-  };
+  });
 
-  const isSpineVisible = (index: number) =>
-    animationReady() && animatedItems().includes(index);
+  const toggleSpine = (index: number) =>
+    setExpandedIndex((prev) => (prev === index ? null : index));
 
   return (
     <div
       class="relative w-screen h-screen overflow-x-scroll overflow-y-hidden scrollbar-hide"
-      style={`--rectangle-width: ${100 / Math.min(albums.data?.length || 0, 16)}vw`}
+      style={{
+        "--rectangle-width": `${unit()}vw`,
+        "--rectangle-height": `${unit()}vh`,
+      }}
     >
       <Switch>
         <Match when={albums.isLoading}>
@@ -132,65 +148,69 @@ const Spines: Component = () => {
         </Match>
         <Match when={albums.isSuccess}>
           <div
-            class={`${isMobile() ? "flex flex-col w-full" : "flex h-full"} spine-container`}
+            class={`${vertical() ? "flex flex-col w-full" : "flex h-full"} spine-container`}
             style={{
-              transform: expandedIndex()
-                ? isMobile()
-                  ? `translateY(calc(-1.6*var(--rectangle-height)*(0.36*${expandedIndex()})))`
-                  : `translateX(calc(-1.6*var(--rectangle-width)*(0.36*${expandedIndex()})))`
-                : "translate(0)",
+              transform:
+                expandedIndex() !== null
+                  ? vertical()
+                    ? `translateY(${-shiftPerIndex() * expandedIndex()!}vh)`
+                    : `translateX(${-shiftPerIndex() * expandedIndex()!}vw)`
+                  : "translate(0)",
               transition: "transform 0.5s ease-out",
             }}
           >
-            {albums?.data?.map((album, index) => (
-              <div
-                class={`${isMobile() ? "flex-none w-full h-spineWidth" : "flex-none h-full w-spineWidth"}`}
-                style={{
-                  transform: isSpineVisible(index)
-                    ? "translate(0)"
-                    : isMobile()
-                      ? "translateX(100%)"
-                      : "translateY(100%)",
-                  transition: `transform 0.85s ease-in-out ${index * 60}ms, ${isMobile() ? "height" : "width"} 0.5s ease-out`,
-                  "flex-shrink": 0,
-                  [isMobile() ? "height" : "width"]:
-                    expandedIndex() === index
-                      ? isMobile()
-                        ? "60vh"
-                        : "60%"
-                      : isMobile()
-                        ? "var(--rectangle-height)"
-                        : "var(--rectangle-width)",
-                }}
-                onMouseDown={() => handleClick(index)}
-              >
-                {isMobile() ? (
-                  <MobileSpine
-                    open={spineOpen()[index]}
-                    height={spineWidth()}
-                    songList={album.songs}
-                    albumCover={album.images[0].url}
-                    albumName={album.name}
-                    artistName={album.artists[0].name}
-                    miniCover={album.images[2].url}
-                    closeSpine={() => toggleSpine(index)}
-                    index={index}
-                  />
-                ) : (
+            <For each={albums.data}>
+              {(album, index) => (
+                <div
+                  role="button"
+                  tabindex="0"
+                  aria-expanded={expandedIndex() === index()}
+                  aria-label={`${album.name} by ${album.artists[0]?.name ?? "Unknown artist"}`}
+                  class={`flex-none cursor-pointer ${
+                    vertical()
+                      ? "w-full h-[var(--rectangle-height)]"
+                      : "h-full w-[var(--rectangle-width)]"
+                  }`}
+                  style={{
+                    transform: entered()
+                      ? "translate(0)"
+                      : vertical()
+                        ? "translateX(100%)"
+                        : "translateY(100%)",
+                    transition: `transform ${SLIDE_MS}ms ease-in-out${
+                      staggering() ? ` ${index() * STAGGER_MS}ms` : ""
+                    }, ${vertical() ? "height" : "width"} 0.5s ease-out`,
+                    "flex-shrink": 0,
+                    [vertical() ? "height" : "width"]:
+                      expandedIndex() === index()
+                        ? vertical()
+                          ? `${EXPANDED_PCT}vh`
+                          : `${EXPANDED_PCT}%`
+                        : vertical()
+                          ? "var(--rectangle-height)"
+                          : "var(--rectangle-width)",
+                  }}
+                  onClick={() => toggleSpine(index())}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      toggleSpine(index());
+                    }
+                  }}
+                >
                   <Spine
-                    open={spineOpen()[index]}
-                    width={spineWidth()}
+                    open={expandedIndex() === index()}
+                    vertical={vertical()}
                     songList={album.songs}
-                    albumCover={album.images[0].url}
+                    albumCover={album.images[0]?.url}
                     albumName={album.name}
-                    artistName={album.artists[0].name}
-                    miniCover={album.images[2].url}
-                    closeSpine={() => toggleSpine(index)}
-                    index={index}
+                    artistName={album.artists[0]?.name ?? ""}
+                    miniCover={album.images[2]?.url ?? album.images[0]?.url}
+                    closeSpine={() => toggleSpine(index())}
                   />
-                )}
-              </div>
-            ))}
+                </div>
+              )}
+            </For>
           </div>
         </Match>
       </Switch>
