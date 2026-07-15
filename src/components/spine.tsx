@@ -7,6 +7,7 @@ import {
 import { SongList } from "./SongList";
 import type { Song } from "./API";
 import { X } from "lucide-solid";
+import { playAlbumPreview } from "./preview";
 
 interface SpineProps {
   open: boolean;
@@ -171,7 +172,15 @@ const Spine: Component<SpineProps> = (props) => {
             {props.artistName}
           </div>
         </div>
-        <SongList songList={props.songList} />
+        <SongList
+          songList={props.songList}
+          onPlay={(index) =>
+            playAlbumPreview(props.songList, index, {
+              albumName: props.albumName,
+              albumImage: props.albumCover,
+            })
+          }
+        />
       </div>
     </div>
   );

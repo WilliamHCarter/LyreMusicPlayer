@@ -1,5 +1,6 @@
 import { createQuery } from "@tanstack/solid-query";
 import type { Album } from "./spines";
+import albumSnapshot from "../data/albums.json";
 
 // SECURITY NOTE: PUBLIC_ env vars are embedded in the built client bundle.
 // Reading these from import.meta.env only keeps the secret out of source
@@ -28,11 +29,15 @@ export interface Song {
   duration: number;
   album: string;
   listens: number;
+  /** 30s Spotify preview MP3, or null when the track's label opts out. */
+  previewUrl?: string | null;
 }
 
 //====================== Albums ============================
 
-const fetchAlbums = async (albumIds: string[]): Promise<Album[]> => {
+// Live Web API path — retained for a future authenticated "your library" view.
+// The default shelf uses the committed snapshot instead (see createAlbums).
+export const fetchAlbums = async (albumIds: string[]): Promise<Album[]> => {
   const accessToken = await getAccessToken();
 
   // One batched request (the /albums endpoint accepts up to 20 ids).
@@ -72,10 +77,16 @@ const fetchAlbums = async (albumIds: string[]): Promise<Album[]> => {
   });
 };
 
-export const createAlbums = (albumIds: string[]) => {
+// The default shelf is served from a committed snapshot scraped from Spotify's
+// public embed pages (see scripts/scrape-albums.mjs). This renders instantly
+// for every visitor with no token, and is immune to the Web API's 403s. The
+// live fetchAlbums path is kept for a future authenticated "your library" view.
+const snapshotAlbums = albumSnapshot as unknown as Album[];
+
+export const createAlbums = (_albumIds: string[]) => {
   return createQuery(() => ({
-    queryKey: ["albums", albumIds],
-    queryFn: () => fetchAlbums(albumIds),
+    queryKey: ["albums", "snapshot"],
+    queryFn: async () => snapshotAlbums,
     refetchOnWindowFocus: false,
   }));
 };

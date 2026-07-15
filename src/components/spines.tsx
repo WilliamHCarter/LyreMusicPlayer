@@ -50,6 +50,32 @@ const MAX_VISIBLE = 16;
 // can slide up exactly when the shelf entrance finishes instead of a hardcoded timeout.
 export const [entranceDone, setEntranceDone] = createSignal(false);
 
+// cubic-bezier(0, 0, 0.58, 1) — the exact curve of CSS `ease-out`. The recenter
+// scroll tween must use this so it stays in lockstep with the spine's CSS width/
+// height `ease-out` growth; a mismatched curve makes the opened album drift one
+// way then the other (scroll racing ahead of the growth) instead of blooming
+// evenly from its center.
+const easeOutCss = (() => {
+  const x2 = 0.58;
+  const bx = 3 * x2; // cx = 0, so bx = 3*(x2-0)-0
+  const ax = 1 - bx; // 1 - cx - bx
+  const by = 3; // cy = 0, y2 = 1
+  const ay = 1 - by; // -2
+  const sampleX = (t: number) => (ax * t + bx) * t * t;
+  const sampleY = (t: number) => (ay * t + by) * t * t;
+  const solveT = (x: number) => {
+    let t = x;
+    for (let i = 0; i < 8; i++) {
+      const dx = sampleX(t) - x;
+      const d = (3 * ax * t + 2 * bx) * t; // dX/dt
+      if (Math.abs(d) < 1e-6) break;
+      t -= dx / d;
+    }
+    return t;
+  };
+  return (p: number) => (p <= 0 ? 0 : p >= 1 ? 1 : sampleY(solveT(p)));
+})();
+
 const Spines: Component = () => {
   // Entrance state: `entered` flips once when data arrives; CSS per-index
   // transition-delay does all the staggering. `staggering` gates those delays
@@ -131,12 +157,76 @@ const Spines: Component = () => {
   const toggleSpine = (index: number) =>
     setExpandedIndex((prev) => (prev === index ? null : index));
 
+  // Recenter the opened album with a real (animated) scroll offset instead of a
+  // CSS transform on the flex track. A transform is visual-only, so it corrupted
+  // the scroll bounds — the first album got pushed out of reach and a dead gap
+  // appeared at the far end. Scrolling reproduces the same center-out motion
+  // (the offset matches the old `shiftPerIndex * index` shift, converted to px)
+  // while keeping the bounds honest: scroll clamps to real content, and album 0
+  // stays reachable at scroll 0.
+  let scrollerRef: HTMLDivElement | undefined;
+  let scrollAnim: number | undefined;
+  let scrollBeforeOpen = 0;
+  let wasOpen = false;
+
+  const readScroll = () =>
+    scrollerRef ? (vertical() ? scrollerRef.scrollTop : scrollerRef.scrollLeft) : 0;
+
+  // rAF tween of the scroll axis over ~0.5s to match the spine growth transition.
+  const animateScrollTo = (target: number) => {
+    const el = scrollerRef;
+    if (!el) return;
+    if (scrollAnim) cancelAnimationFrame(scrollAnim);
+    const axisVertical = vertical();
+    const start = axisVertical ? el.scrollTop : el.scrollLeft;
+    const delta = target - start;
+    const DURATION = 500; // matches the spine growth transition (0.5s)
+    const t0 = performance.now();
+    const step = (now: number) => {
+      const p = Math.min(1, (now - t0) / DURATION);
+      const v = start + delta * easeOutCss(p);
+      if (axisVertical) el.scrollTop = v;
+      else el.scrollLeft = v;
+      if (p < 1) scrollAnim = requestAnimationFrame(step);
+    };
+    scrollAnim = requestAnimationFrame(step);
+  };
+
+  createEffect(() => {
+    const idx = expandedIndex();
+    const opening = idx !== null;
+    // Remember the pre-open scroll only on the closed→open edge, so opening a
+    // second album (open→open) doesn't overwrite it and close can restore it.
+    if (opening && !wasOpen) scrollBeforeOpen = readScroll();
+    wasOpen = opening;
+
+    if (!scrollerRef) return;
+    if (idx === null) {
+      animateScrollTo(scrollBeforeOpen);
+    } else {
+      const axisPx = vertical() ? scrollerRef.clientHeight : scrollerRef.clientWidth;
+      animateScrollTo((shiftPerIndex() * idx * axisPx) / 100);
+    }
+  });
+
   return (
     <div
-      class="relative w-screen h-screen overflow-x-scroll overflow-y-hidden scrollbar-hide"
+      ref={scrollerRef}
+      // Scroll the axis the flex track actually runs on: Y for the vertical
+      // (mobile) shelf, X for the horizontal (desktop) shelf. Driven off
+      // vertical() rather than a sm: class so it tracks the same 712px breakpoint.
+      class={`relative w-screen h-screen scrollbar-hide ${
+        vertical()
+          ? "overflow-y-auto overflow-x-hidden"
+          : "overflow-x-auto overflow-y-hidden"
+      }`}
       style={{
-        "--rectangle-width": `${unit()}vw`,
-        "--rectangle-height": `${unit()}vh`,
+        // Floor the spine thickness so titles/covers aren't crammed on small
+        // viewports. Desktop: never thinner than its width at a 1300px viewport
+        // (1vw = 13px there). Mobile: a modest absolute floor, a bit wider than
+        // the ~50px it was. Below the floor the shelf overflows and scrolls.
+        "--rectangle-width": `max(${unit()}vw, ${unit() * 13}px)`,
+        "--rectangle-height": `max(${unit()}vh, 64px)`,
       }}
     >
       <Switch>
@@ -154,16 +244,10 @@ const Spines: Component = () => {
         </Match>
         <Match when={albums.isSuccess}>
           <div
-            class={`${vertical() ? "flex flex-col w-full" : "flex h-full"} spine-container`}
-            style={{
-              transform:
-                expandedIndex() !== null
-                  ? vertical()
-                    ? `translateY(${-shiftPerIndex() * expandedIndex()!}vh)`
-                    : `translateX(${-shiftPerIndex() * expandedIndex()!}vw)`
-                  : "translate(0)",
-              transition: "transform 0.5s ease-out",
-            }}
+            // pb-12 (mobile only) pads the bottom of the vertical shelf by the
+            // fixed BottomBar's height (h-12) so the last album can scroll clear
+            // of it instead of being hidden behind it.
+            class={`${vertical() ? "flex flex-col w-full pb-12" : "flex h-full"} spine-container`}
           >
             <For each={albums.data}>
               {(album, index) => (
@@ -172,7 +256,14 @@ const Spines: Component = () => {
                   tabindex="0"
                   aria-expanded={expandedIndex() === index()}
                   aria-label={`${album.name} by ${album.artists[0]?.name ?? "Unknown artist"}`}
+                  // Clip collapsed spines so their absolute, transform-displaced
+                  // song lists stop leaking into the scroller's scrollable region
+                  // (the source of desktop's blank space and mobile's phantom
+                  // height). The open spine stays unclipped: its song list
+                  // intentionally extends past the spine box.
                   class={`flex-none cursor-pointer ${
+                    expandedIndex() === index() ? "" : "overflow-hidden"
+                  } ${
                     vertical()
                       ? "w-full h-[var(--rectangle-height)]"
                       : "h-full w-[var(--rectangle-width)]"

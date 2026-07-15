@@ -1,17 +1,39 @@
 import { For, Show } from "solid-js";
+import { Play } from "lucide-solid";
 import { type Song } from "./API";
 
-export const SongRow = (props: { song: Song }) => {
+export const SongRow = (props: { song: Song; onPlay?: () => void }) => {
   return (
     <>
-      <div class="flex items-center justify-between p-2">
-        <div>
-          <h3 class="text-sm md:text-lg font-semibold text-white">
-            {props.song.title}
-          </h3>
-          <p class="text-xs md:text-sm text-white opacity-50">
-            {props.song.artist}
-          </p>
+      <div
+        class={`flex items-center justify-between p-2 ${
+          props.onPlay
+            ? "cursor-pointer hover:bg-white hover:bg-opacity-10 transition duration-200"
+            : ""
+        }`}
+        role={props.onPlay ? "button" : undefined}
+        tabindex={props.onPlay ? "0" : undefined}
+        aria-label={props.onPlay ? `Play ${props.song.title}` : undefined}
+        onClick={() => props.onPlay?.()}
+        onKeyDown={(e) => {
+          if (props.onPlay && (e.key === "Enter" || e.key === " ")) {
+            e.preventDefault();
+            props.onPlay();
+          }
+        }}
+      >
+        <div class="flex items-center gap-2">
+          <Show when={props.onPlay}>
+            <Play class="text-white opacity-50 shrink-0" size={14} />
+          </Show>
+          <div>
+            <h3 class="text-sm md:text-lg font-semibold text-white">
+              {props.song.title}
+            </h3>
+            <p class="text-xs md:text-sm text-white opacity-50">
+              {props.song.artist}
+            </p>
+          </div>
         </div>
         <div class="flex items-center gap-4">
           <time
@@ -35,6 +57,8 @@ export const SongRow = (props: { song: Song }) => {
 
 interface SongListProps {
   songList: Song[];
+  /** When provided, rows are playable and clicking row i calls onPlay(i). */
+  onPlay?: (index: number) => void;
 }
 
 export const SongList = (props: SongListProps) => {
@@ -45,7 +69,20 @@ export const SongList = (props: SongListProps) => {
       tabindex="0"
       class="max-h-[45vh] overflow-y-auto scrollbar-styled focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
     >
-      <For each={props.songList}>{(song) => <SongRow song={song} />}</For>
+      <For each={props.songList}>
+        {(song, index) => (
+          <SongRow
+            song={song}
+            // Only tracks with a 30s preview are playable; the rest are
+            // browse-only (no play affordance, no click handler).
+            onPlay={
+              props.onPlay && song.previewUrl
+                ? () => props.onPlay!(index())
+                : undefined
+            }
+          />
+        )}
+      </For>
     </div>
   );
 };

@@ -1,6 +1,13 @@
 import { createSignal, Show, onMount } from "solid-js";
 import { Play, Pause, SkipForward, SkipBack } from "lucide-solid";
 import { getUserToken, type Track } from "./API";
+import {
+  previewNowPlaying,
+  previewPlaying,
+  togglePreview,
+  previewNext,
+  previewPrev,
+} from "./preview";
 
 const SDK_URL = "https://sdk.scdn.co/spotify-player.js";
 
@@ -135,6 +142,70 @@ export const MusicPlayer = () => {
 
   return (
     <div class="relative w-[65vw] sm:w-[25vw] h-full bg-black flex items-center justify-between">
+      {/* 30s preview playback takes over the bar while active; the Spotify SDK
+          path (login-gated, vestigial for now) is shown otherwise. */}
+      <Show when={previewNowPlaying()} fallback={<SpotifyBar />}>
+        <div
+          class="absolute inset-0 bg-cover bg-center blur-md opacity-50"
+          style={{
+            "background-image": `url(${previewNowPlaying()!.albumImage})`,
+          }}
+        ></div>
+        <div class="relative z-10 h-full flex items-center">
+          <button
+            type="button"
+            aria-label={previewPlaying() ? "Pause" : "Play"}
+            class="relative h-full aspect-square overflow-hidden cursor-pointer"
+            onClick={togglePreview}
+          >
+            <img
+              src={previewNowPlaying()!.albumImage}
+              alt="Album Cover"
+              class="w-full h-full object-cover"
+            />
+            <Show when={!previewPlaying()}>
+              <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                <Play class="text-white" fill="white" size={18} />
+              </div>
+            </Show>
+          </button>
+          <div class="text-white flex flex-col justify-center h-full pl-4 py-1 w-[33vw] sm:w-[10vw] bg-[#ffffff30]">
+            <div class="text-[10px] opacity-70 leading-tight">
+              {previewNowPlaying()!.artistName} - {previewNowPlaying()!.albumName}
+            </div>
+            <div class="text-md font-semibold mt-0 leading-tight">
+              {previewNowPlaying()!.songName}
+            </div>
+            <div class="text-[9px] opacity-50 leading-tight">
+              30s preview
+            </div>
+          </div>
+        </div>
+        <div class="absolute right-4 flex items-center space-x-4 z-10">
+          <button
+            type="button"
+            aria-label="Previous track"
+            class="text-white cursor-pointer"
+            onClick={previewPrev}
+          >
+            <SkipBack fill="white" size={18} />
+          </button>
+          <button
+            type="button"
+            aria-label="Next track"
+            class="text-white cursor-pointer"
+            onClick={previewNext}
+          >
+            <SkipForward fill="white" size={18} />
+          </button>
+        </div>
+      </Show>
+    </div>
+  );
+
+  // Existing Spotify Web Playback SDK bar, unchanged behavior.
+  function SpotifyBar() {
+    return (
       <Show
         when={isLoggedIn()}
         fallback={
@@ -217,6 +288,6 @@ export const MusicPlayer = () => {
           </button>
         </div>
       </Show>
-    </div>
-  );
+    );
+  }
 };
