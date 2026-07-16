@@ -1,6 +1,7 @@
 import { createSignal, Show, onMount } from "solid-js";
 import { Play, Pause, SkipForward, SkipBack } from "lucide-solid";
 import { getUserToken, type Track } from "./API";
+import { ScrollingText } from "./ScrollingText";
 import {
   previewNowPlaying,
   previewPlaying,
@@ -170,12 +171,12 @@ export const MusicPlayer = () => {
             </Show>
           </button>
           <div class="text-white flex flex-col justify-center h-full pl-4 py-1 w-[33vw] sm:w-[10vw] bg-[#ffffff30]">
-            <div class="text-[10px] opacity-70 leading-tight">
+            <ScrollingText class="text-[10px] opacity-70 leading-tight">
               {previewNowPlaying()!.artistName} - {previewNowPlaying()!.albumName}
-            </div>
-            <div class="text-md font-semibold mt-0 leading-tight">
+            </ScrollingText>
+            <ScrollingText class="text-md font-semibold mt-0 leading-tight">
               {previewNowPlaying()!.songName}
-            </div>
+            </ScrollingText>
             <div class="text-[9px] opacity-50 leading-tight">
               30s preview
             </div>
@@ -255,12 +256,12 @@ export const MusicPlayer = () => {
                 </div>
               }
             >
-              <div class="text-[10px] opacity-70 leading-tight">
+              <ScrollingText class="text-[10px] opacity-70 leading-tight">
                 {currentTrack()?.artistName} - {currentTrack()?.albumName}
-              </div>
-              <div class="text-md font-semibold mt-0 leading-tight">
+              </ScrollingText>
+              <ScrollingText class="text-md font-semibold mt-0 leading-tight">
                 {currentTrack()?.songName}
-              </div>
+              </ScrollingText>
             </Show>
             <Show when={playerError()}>
               <div class="text-[10px] text-red-400 leading-tight" role="alert">
