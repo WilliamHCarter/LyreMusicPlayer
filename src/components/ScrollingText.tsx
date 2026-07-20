@@ -44,7 +44,10 @@ export const ScrollingText: Component<ScrollingTextProps> = (props) => {
 
     const overflow = inner.scrollWidth - container.clientWidth;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (overflow <= 1 || reduced) return; // fits, or reduced motion → static
+    // Ignore sub-character overflows (< ~half a glyph): a tiny twitchy scroll
+    // reads worse than clipping a couple of pixels. Real long titles overflow
+    // by far more and still scroll.
+    if (overflow <= 8 || reduced) return; // fits, or reduced motion → static
 
     const SPEED = 45; // px/second
     const travel = (overflow / SPEED) * 1000;
